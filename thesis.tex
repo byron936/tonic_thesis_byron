@@ -1,0 +1,77 @@
+\documentclass[12pt,oneandahalfspaced, a4paper]{tonic-thesis}
+
+%% Some useful LaTeX packages
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{cite}
+\usepackage{indentfirst}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{rotating}
+\usepackage{url}
+
+%% hyperref in PDF
+\usepackage{savesym}
+\savesymbol{pdfbookmark}
+\usepackage{hyperref}
+\restoresymbol{HR}{pdfbookmark}
+\hypersetup{
+    colorlinks,%
+    citecolor=black,%
+    filecolor=black,%
+    linkcolor=black,%
+    urlcolor=black,%
+    bookmarksnumbered=true
+}
+
+\numberwithin{equation}{chapter} %Equation (3.5) instead of Equation (16)
+
+%% Start of your thesis content
+
+\title{Optimization of User Equipment Random Access Delay in LEO Satellite Communication Systems via Synchronization Signal Block Periodicity}
+\author{Po-Yu Yen}
+
+\department{Graduate Institute of Communication Engineering}
+\degree{Master of Science}
+\submitdate{July 2025}
+\copyrightyear{2025}
+
+\begin{document}
+
+\begin{preliminary}
+
+\begin{abstract}
+\input{abstract}
+\end{abstract}
+
+\contents
+
+\end{preliminary}
+
+
+\input{chap1}
+\input{chap2}
+\input{chap3}
+\input{chap4}
+\input{chap5}
+\input{chap6}
+
+
+\begin{postliminary}
+
+\bibfiles{reference}
+\bibliographystyle{IEEEtran}
+
+\references
+
+\end{postliminary}
+
+
+\end{document}
