@@ -14,15 +14,9 @@ This chapter introduces the LEO satellite communication system, as illustrated i
     \label{fig_system}
 \end{figure}
 % TODO: time slot definition
-We define a short time $T^{slot}$ as the time duration of a time slot, and $T^{total}$ as the total time that the satellite serves the area. Thus, there are $T^{total} / T^{slot}$ time slots in total service time, denoted as $\mathcal{T} = \{t\ |\ t = 1, 2, \ldots, T^{total} / T^{slot}\}$.
+We define a short time $T^{slot}$ as the time duration of a time slot, and $T^{total}$ as the total time that the satellite serves the area. Thus, there are $T^{total} / T^{slot}$ time slots in total service time, denoted as $\mathcal{T} = \{t\ |\ t = 1, 2, \ldots, T^{total} / T^{slot}\}$. 
 
 In this thesis, we adopt the quasi-earth-fixed scheme. Unlike the earth-moving cell scheme—where the coverage areas of satellite beams move as the LEO satellites orbit—this approach directs satellite beams so that each beam consistently covers the same geographical cell for a given period. Thus, the coverage area of each satellite beam remains fixed relative to the ground during that interval. Throughout, we assume each satellite beam is oriented toward the center of its designated cell.
-
-We define a power budget for the satellite. Let $P_{m}[t]$ denote the transmitted power of the $m$-th beam from the satellite at time slot $t$. The aggregate transmit power of all beams on the satellite must satisfy:
-\begin{equation}
-    \sum_{m} P_{m}[t] \leq P^{total}, \quad \forall t \in \mathcal{T}
-\end{equation}
-where $P^{total}$ is the maximum transmit power per satellite.
 
 The locations of UEs wishing to access the network are assigned randomly within their corresponding cells, and the population of each cell are generated according to area population density statistics.
 
@@ -50,91 +44,108 @@ We introduce the antenna radiation pattern in~\cite{Energy-Efficient}:
 \end{equation}
 where $\theta_{m,u}$ is the boresight angle between the user position and the beam center with respect to the satellite, $G_{max}$ is the maximum antenna gain, $\mu(\theta)$ is defined as $2.07123 \cdot \sin(\theta)/\sin(\theta_{3dB})$, $\theta_{3dB}$ is the 3 dB half-power beamwidth angle of the antenna, and $J_1(\cdot)$, $J_3(\cdot)$ are the Bessel functions of the first kind of orders 1 and 3, respectively.
 
-With the transmitted power $P_{m}$ from the $m$-th beam of the satellite, the received power at the $u$-th user, $\hat{P}_{m,u}$, is given by:
+\subsection{UE Received Power}
+In this thesis, the transmitted power of each beam is fixed during one epoch. The transmitted power of the $m$-th beam at the $s$-th epoch is denoted as $P_{m}[s]$. In the $s$-th epoch, the received power of the $u$-th user at the $t$-th time slot $\hat{P}_{m,u}[t]$ can be calculated as follows:
 \begin{equation}
-    \hat{P}_{m,u} = P_{m} \cdot L_{k} \cdot h_{k} \cdot G(\theta_{m,u})
+    \hat{P}_{m,u}[t] = P_{m}[s] \cdot L_{k} \cdot h_{k} \cdot G(\theta_{m,u}) \label{eq:T-R}
 \end{equation}
-where $k$ is the cell where user $u$ is located.
+where $k$ is the cell where user $u$ is located. 
 
-We define Signal-to-Noise Ratio (SNR) of the $u$-th UE as follows:
+% We define Signal-to-Noise Ratio (SNR) of the $u$-th UE as follows:
+% \begin{equation}
+%     SNR_u = \frac{\hat{P}_{m,u}}{N}
+% \end{equation}
+% where $N$ is the power of the white gaussian noise, which is a random variable with mean $0$ and variance $\sigma$.
+\section{Joint Power-Periodicity Optimization on SSB}
+In this section, we will discuss how the satellite beam transmitted power and the SSB periodicity affect UE cell search delay and formulate an optimization problem. 
+\textcolor{blue}{During the total service time, it is essential to adjust the satellite beam transmitted power and the SSB periodicity because the system environment changes in real-time. The most significant change is the elevation angle of the satellite. It affects not only the transmission distance, but also the channel fading effect. However, it is not beneficial to adjust the power and periodicity each time slot. Thus, we adjust the satellite beam transmitted power and the SSB periodicity in a certain number of time slots, defined as an epoch. }We define one epoch equals to $N$ time slots, so there are $T^{total} / T^{slot} / N$ epochs in total. We denote these epochs as $\mathcal{S} = \{s\ |\ s = 1, 2, \ldots, (T^{total} / T^{slot}) / N\}$. In each epoch, the satellite beam transmitted power and the SSB periodicity remain the same. 
+
+\subsection{Satellite Power Constraint}
+
+\textcolor{blue}{In LEO satellite communication systems, satellites primarily rely on solar power for data transmission. Each satellite has a specific power budget, determined by the amount of solar energy it can harvest. Since the distance between space and ground is typically several hundred kilometers, transmitted signals must be strong enough to achieve the minimum signal-to-noise ratio (SNR) required on the user equipment (UE) side. Therefore, the efficient allocation of power resources to each beam under a limited power budget is a critical topic in LEO satellite communication system design.}
+We define a power budget for the satellite. Let $P_{m}[s]$ denote the transmitted power of the $m$-th beam from the satellite at time slot $t$. The aggregate transmit power of all beams on the satellite must satisfy:
 \begin{equation}
-    SNR_u = \frac{\hat{P}_{m,u}}{N}
+    \sum_{m} P_{m}[s] \leq P^{total}, \quad \forall t \in \mathcal{T}
 \end{equation}
+where $P^{total}$ is the maximum transmit power per satellite.
 
-where $N$ is the power of the white gaussian noise, which is a random variable with mean $0$ and variance $\sigma$.
-\section{Synchronization Signal Block Model}
+\subsection{Synchronization Signal Block Periodicity}
 
-During each time slot, the satellite beams transmit one Synchronization Signal Block (SSB) burst to ground cells, and each SSB burst contains at most $M$ SSBs. In this thesis, we adjust the SSB periodicity of each cell due to two main reasons. First, the elevation angle of the satellite changes during the service time. The smaller elevation angle it is, the more power each beam has to allocate to achieve the successful transmission. Therefore, it is essential to adjust SSB periodicity to meet the power budget requirement. Second, we adjust the SSB periodicity based on the previous UE cell searching delay performance. Thus, we define 1 epoch equals to $N$ time slots, and we adjust the SSB periodicity every epoch. We denote the epochs in the service time as $\mathcal{S} = \{s\ |\ s = 1, 2, \ldots, (T^{total} / T^{slot}) / N\}$. During each epoch, the SSB periodicity of each cell is fixed. We then define the SSB periodicity of the cell $k$ at the $s$-th epoch as the number of slots between two consecutive SSBs that transmit to the $k$-th cell, denoted as $T^{SSB}_k[s]$. 
+During the total service time, the satellite transmits SSBs to the serving cells at specific time intervals, depending on the SSB periodicity configured for each cell. In this thesis, we adjust the SSB periodicity of each cell due to two main reasons. First, the elevation angle of the satellite changes during the service time. The smaller elevation angle it is, the more power each beam has to allocate to achieve the successful transmission. Therefore, it is essential to adjust SSB periodicity to meet the power budget requirement. Second, we adjust the SSB periodicity based on the previous UE cell searching delay performance. Thus, we adjust the SSB periodicity every epoch. During each epoch, the SSB periodicity of each cell is fixed. We then define the SSB periodicity of the cell $k$ at the $s$-th epoch as the number of slots between two consecutive SSBs that transmit to the $k$-th cell, denoted as $\theta_k[s]$. 
 
 % \section{Ground Cell Model}
 
 % To achieve optimal coverage and minimize overlap, all ground cells are arranged in a regular hexagonal grid, ensuring uniform cell size, as shown in Figure~\ref{fig_system}. Each cell is served by at most one satellite beam in each time slot. To optimize the network coverage, we adjust the size of each cell. The larger cell size decreases the number of cells one satellite has to serve, but the power requirement for a beam to cover a cell increases. On the other hand, if a smaller cell is used, the UEs are able to receive the beam with more precise angle. Nonetheless the number of cells is large for the serving satellite to handle. Thus, we define the area of each ground cell as $A^{cell}$, and the serving area of the satellite as $A^{total}$. The number of cells the satellite serves is then calculated as $K = \frac{A^{total}}{A^{cell}}$, denoted as $\mathcal{K} = \{k\ |\ k = 1, 2, \ldots, K\}$.
 
-\section{Radio Link Monitoring}
-When the UEs successfully connect to the network, they continuously monitor the received power of the SSB to determine whether the link quality is good enough for the data transmission. When the link quality gets worse, "Radio Link Failure" (RLF) occurs and the UE will handover to another cell that offers better link quality. Here we define the procedure of RLF. 
-\begin{enumerate}
-  \item The UE checks the received power of the serving cell SSB against a configured quality threshold called Qout.
-  \item If the detected power stays below Qout for N310 consecutive occasions, the UE triggers an "Out-Of-Sync" state and starts the T310 timer.
-  \item If the link recovers N311 consecutive "In Sync" indications, the timer stops. If T310 expires without recovery, RLF is declared.
-  \item After detecting RLF, the UE immediately monitors the SSBs of ther neighbor cells and do the random access procedure once it finds the best SSB.
-\end{enumerate}
+% \section{Radio Link Monitoring}
+% When the UEs successfully connect to the network, they continuously monitor the received power of the SSB to determine whether the link quality is good enough for the data transmission. When the link quality gets worse, "Radio Link Failure" (RLF) occurs and the UE will handover to another cell that offers better link quality. Here we define the procedure of RLF. 
+% \begin{enumerate}
+%   \item The UE checks the received power of the serving cell SSB against a configured quality threshold called Qout.
+%   \item If the detected power stays below Qout for N310 consecutive occasions, the UE triggers an "Out-Of-Sync" state and starts the T310 timer.
+%   \item If the link recovers N311 consecutive "In Sync" indications, the timer stops. If T310 expires without recovery, RLF is declared.
+%   \item After detecting RLF, the UE immediately monitors the SSBs of ther neighbor cells and do the random access procedure once it finds the best SSB.
+% \end{enumerate}
 
-\section{Handover Procedure}
-When the UE moves and the radio connection to its current cell becomes weaker, handover happens. The UE will disconnect to the current serving cell, and search for the next cell immediately. We will choose the next serving cell for the UE based on the cell searching procedure. The handover procedure is as follows:
-\begin{enumerate}
-  \item RLF is declared while the UE monitors the received power of the serving cell SSB. 
-  \item The UE disconnects to the serving cell, and starts cell searching procedure to find the most suitable target cell.
-  \item After the UE selects the target cell successfully, random access procedure begins to connect the UE and the network. 
-\end{enumerate}
+% \section{Handover Procedure}
+% When the UE moves and the radio connection to its current cell becomes weaker, handover happens. The UE will disconnect to the current serving cell, and search for the next cell immediately. We will choose the next serving cell for the UE based on the cell searching procedure. The handover procedure is as follows:
+% \begin{enumerate}
+%   \item RLF is declared while the UE monitors the received power of the serving cell SSB. 
+%   \item The UE disconnects to the serving cell, and starts cell searching procedure to find the most suitable target cell.
+%   \item After the UE selects the target cell successfully, random access procedure begins to connect the UE and the network. 
+% \end{enumerate}
 
-\section{UE Cell Searching}
-UE Cell searching is an essential part in the handover procedure. The UE cell searching procedure is as follows: 
-\begin{enumerate}
-  \item The UE measures the received power of all neighbor cell SSBs for $L$ time slots, one SSB could be listened more than one time.
-  \item The UE calculates the average received power of each measured SSB, and chooses the SSB with the strongest average recived power as its target cell.
-\end{enumerate}
-When the UE is executing cell searching, there is no data transmission between the UE and the network, so it is important for the UE to find the target cell as soon as possible. Also, the number of different SSBs in the UE measuring time differs, depending on the SSB periodicity. The UE may mistakenly choose the cell with lower average received power because of insufficient sampling. We formulate the mathematical model of UE cell searching delay as follows. 
+% \section{UE Cell Searching}
+% UE Cell searching is an essential part in the handover procedure. The UE cell searching procedure is as follows: 
+% \begin{enumerate}
+%   \item The UE measures the received power of all neighbor cell SSBs for $L$ time slots, one SSB could be listened more than one time.
+%   \item The UE calculates the average received power of each measured SSB, and chooses the SSB with the strongest average recived power as its target cell.
+% \end{enumerate}
+% When the UE is executing cell searching, there is no data transmission between the UE and the network, so it is important for the UE to find the target cell as soon as possible. Also, the number of different SSBs in the UE measuring time differs, depending on the SSB periodicity. The UE may mistakenly choose the cell with lower average received power because of insufficient sampling. We formulate the mathematical model of UE cell searching delay as follows. 
 
-We define the number of time slots a UE waits from starting cell searching to the arrival of the first SSB be $\alpha$, which is a random variable. Since the UE can start SSB monitoring at any time, $\alpha$ is uniformly distributed from $0$ to $T_{k}^{SSB}[s]$, where $k$ represents the best cell for the UE. We also define the additional delay due to failed attempts as $\beta$. The failed attempts happens when the SNR of the $k$-th cell is less than a threshold $Q$. We can express the cell searching delay $\gamma$ as follows:
-\begin{equation}
-    \gamma = \alpha + \beta
-\end{equation}
-\begin{equation}
-    F_{\alpha}(x) =
-    \begin{cases}
-        \frac{x}{T_{k}^{SSB}[s]}, & 0 \leq x < T_{k}^{SSB}[s] \\
-        1, & x \geq T_{k}^{SSB}[s] \\
-        0, & \text{otherwise}
-    \end{cases}
-\end{equation}
-
-% The random access delay $T_u[s]$ for the $u$-th UE is a random variable, defined as the time duration between the start of SSB measurement and the successful reception of SSB at the $s$-th epoch, as shown in Figure~\ref{RAD}. $T_u$ can be decomposed into two parts: $T_u^i[s]$ (initial waiting time at the $s$-th epoch) and $T_u^l[s]$ (additional delay due to failed attempts at the $s$-th epoch). $T_u^i[s]$ is a random variable that represents the time from the start of SSB measurement to the arrival of the first SSB, and $T_u^l[s]$ is another random variable that represents the time from the first SSB arrival to the successful SSB reception. Since the UE can start SSB measurement at any time, $T_u^i[s]$ is a uniformly distributed random variable $U(0, T_{k}^{SSB}[s])$. $T_u^l[s]$ is a multiple of $T_{k}^{SSB}[s]$, depending on the number of failures $Q_u[s]$. If the received SSB power $\hat{P}_{m, u}[t]$ is less than the threshold $P^{th}$, the UE fails to measure SSB. The probability that the received SSB power is less than $P^{th}$ is denoted as $R_u[t]$. The mathematical formulation is as follows:
+% We define the number of time slots a UE waits from starting cell searching to the arrival of the first SSB be $\alpha$, which is a random variable. Since the UE can start SSB monitoring at any time, $\alpha$ is uniformly distributed from $0$ to $T_{k}^{SSB}[s]$, where $k$ represents the best cell for the UE. We also define the additional delay due to failed attempts as $\beta$. The failed attempts happens when the SNR of the $k$-th cell is less than a threshold $Q$. We can express the cell searching delay $\gamma$ as follows:
 % \begin{equation}
-%     T_u[s] = T_u^i[s] + T_u^l[s]
+%     \gamma = \alpha + \beta
 % \end{equation}
 % \begin{equation}
-%     F_{T_u^i[s]}(x) =
+%     F_{\alpha}(x) =
 %     \begin{cases}
 %         \frac{x}{T_{k}^{SSB}[s]}, & 0 \leq x < T_{k}^{SSB}[s] \\
 %         1, & x \geq T_{k}^{SSB}[s] \\
 %         0, & \text{otherwise}
 %     \end{cases}
 % \end{equation}
-% \begin{equation}
-%     T_u^l[s] = Q_u[s] \cdot T_{k}^{SSB}[s]
-% \end{equation}
-% \begin{equation}
-%     \Pr\{Q_u[s] = n\} = (1 - R_u[(s-1) \cdot N + n]) \prod_{i=1}^{n-1} R_u[i] 
-% \end{equation}
-% where $k_u$ is the cell where the $u$-th UE is located, and $F_{T_u^i}(x)$ is the CDF of $T_u^i$. $R_u$ can be expressed by $F_{h_k}$ as follows:
-% \begin{equation}
-%     \begin{aligned}
-%         R_u[t]
-%         &= \Pr\{\hat{P}_{m, u}[t] < P^{th}\} \\
-%         &= \Pr\{h_k < \frac{P^{th}}{P_m[t] \cdot L_k \cdot G(\theta_{m, u})}\} \\
-%         &= F_{h_k}(\frac{P^{th}}{P_m[t] \cdot L_k \cdot G(\theta_{m, u})})
-%     \end{aligned}
-% \end{equation}
+
+\section{UE Cell Searching Delay}
+The cell searching delay $\alpha_u[s]$ for the $u$-th UE is a random variable, defined as the time duration between the start of SSB measurement and the successful reception of SSB at the $s$-th epoch.
+% , as shown in Figure~\ref{RAD}. 
+$\alpha_u[s]$ can be decomposed into two parts: $\beta_u[s]$ (initial waiting time at the $s$-th epoch) and $\gamma_u[s]$ (additional delay due to failed attempts at the $s$-th epoch). $\beta_u[s]$ is a random variable that represents the time from the start of SSB measurement to the arrival of the first SSB, and $\gamma_u[s]$ is another random variable that represents the time from the first SSB arrival to the successful SSB reception. Since the UE can start SSB measurement at any time, $\beta_u[s]$ follows uniform distribution from $0$ to $\theta_k[s]$, where $k$ represents the serving cell of $u$. $\gamma_u[s]$ is a multiple of $\theta_k[s]$, depending on the number of SSB reception failures $Q_u[s]$, which is a discrete random variable. If the received SSB power at the $t$-th time slot $\hat{P}_{m, u}[t]$ is less than the threshold $P^{th}$, the UE fails to measure SSB. The probability that the received SSB power is less than $P^{th}$ at the $t$-th time slot is denoted as $R_u[t]$. The mathematical formulation is as follows:
+\begin{equation}
+    \alpha_u[s] = \beta_u[s] + \gamma_u[s] \label{eq:alpha}
+\end{equation}
+\begin{equation}
+    F_{\beta_u[s]}(x) =
+    \begin{cases}
+        \frac{x}{\theta_k[s]}, & 0 \leq x < \theta_k[s] \\
+        1, & x \geq \theta_k[s] \\
+        0, & \text{otherwise}
+    \end{cases}
+\end{equation}
+\begin{equation}
+    \gamma_u[s] = Q_u[s] \cdot \theta_k[s]
+\end{equation}
+where $F_{\beta_u[s]}(x)$ is the CDF of $\beta_u[s]$. To calculate the Probability Mass Function (PMF) of $Q_u[s]$, we denote the $u$-th UE fails to measure $n$ SSBs at $t_1, t_2, \ldots, t_n$ time slots, and successfully receives SSB at time slot $t_{n+1}$. The PMF of $Q_u[s]$ can be express as follows: 
+\begin{equation}
+    \Pr\{Q_u[s] = n\} = (1 - R_u[t_{n+1}]) \prod_{i=1}^n R_u[t_i]
+\end{equation}
+$R_u[t]$ can be expressed by $F_{h_k}$ as follows:
+\begin{equation}
+    \begin{aligned}
+        R_u[t]
+        &= \Pr\{\hat{P}_{m, u}[t] < P^{th}\} \\
+        &= \Pr\{h_k < \frac{P^{th}}{P_m[t] \cdot L_k \cdot G(\theta_{m, u})}\} \\
+        &= F_{h_k}(\frac{P^{th}}{P_m[t] \cdot L_k \cdot G(\theta_{m, u})})
+    \end{aligned} \label{eq:Ru}
+\end{equation}
 
 % \begin{figure}[h!]
 %     \centering
@@ -148,15 +159,15 @@ This section formulates the optimization problem based on recent 3GPP standardiz
 
 \begin{equation}
 \begin{aligned}
-    & \underset{P_m[t], T_k^{SSB}[s]}{\text{min}} \sum_{u \in \mathcal{U}} \sum_{s \in \mathcal{S}} T_u[s] \\
+    & \underset{P, \theta}{\text{min}} \sum_{u \in \mathcal{U}} \sum_{s \in \mathcal{S}} E[{\alpha_u[s]}] \\
     & \text{subject to} \\
     & \quad \sum_{m} P_{m}[t] \leq P^{total}, \quad \forall t \in \mathcal{T} \\
     & \quad P_{m}[t] \geq 0, \quad \forall m \in \mathcal{M}, t \in \mathcal{T} \\
-    & \quad T_k^{SSB}[s] \leq N, \quad \forall k \in \mathcal{K}, \forall s \in \mathcal{S} \\
-    & \quad T_k^{SSB}[s] \in \mathbb{N}^+, \quad \forall k \in \mathcal{K}, \forall s \in \mathcal{S} \\
+    & \quad \theta_k[s] \leq N, \quad \forall k \in \mathcal{K}, \forall s \in \mathcal{S} \\
+    & \quad \theta_k[s] \in \mathbb{N}^+, \quad \forall k \in \mathcal{K}, \forall s \in \mathcal{S} \\
 \end{aligned}
 \end{equation}
-where $\mathbb{N}^+$ is the set with all positive integers. 
+where $\mathbb{N}^+$ is the set with all positive integers. The mathematical fomula between transmitted power and received power is described in equation (\ref{eq:T-R}). And the mathematical derivation between the received power $\hat{P}_{m, u}[t]$, $\theta_k[s]$ and $\alpha_u[s]$ is described from equation (\ref{eq:alpha}) to equation (\ref{eq:Ru}). 
 
 % \section{List of Symbols}
 % \begin{tabular}{ll}
