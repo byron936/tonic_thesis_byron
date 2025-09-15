@@ -32,9 +32,9 @@ where $\lambda$ is the wavelength, and $d_{k}$ is the distance between the satel
 \subsection{Shadowed-Rician Fading Channel}
 The shadowed-Rician fading model is suitable for satellite communication systems because it accurately reflects the physical propagation environment, capturing both the presence of a strong line-of-sight (LoS) signal and the effects of shadowing from obstacles~\cite{channel-model}. Let $h_{k}$ denote the channel gain between the satellite and the $k$-th cell. The cumulative distribution function (CDF) of the channel gain is:
 \begin{equation}
-    F_{h_{k}}(x) = K \sum_{n=0}^{\infty} \frac{(m)_n \, \delta^n \, (2b)^{1+n}}{(n!)^2} \, \gamma\left(1+n, \frac{x}{2b}\right)
+    F_{h_{k}}(x) = K \sum_{n=0}^{\infty} \frac{(m)_n \, \delta^n \, (2b)^{1+n}}{(n!)^2} \, \zeta\left(1+n, \frac{x}{2b}\right)
 \end{equation}
-where $K = \left(\frac{2bm}{2bm+\Omega}\right)^m/2b$, $\delta = \Omega/(2bm+\Omega)/2b$, $\Omega$ is the average power of the LoS component, $2b$ is the average power of the multipath component except the LoS component, and $m$ is the Nakagami parameter.
+where $K = \left(\frac{2bm}{2bm+\Omega}\right)^m/2b$, $\delta = \Omega/(2bm+\Omega)/2b$, $\Omega$ is the average power of the LoS component, $2b$ is the average power of the multipath component except the LoS component, and $m$ is the Nakagami parameter.  $\Gamma(\cdot)$ is the Gamma function, and the Pochhammer symbol is defined as $(x)_n=\Gamma(x+n)/\Gamma(x)$. The lower incomplete Gamma function is defined as $\zeta(a, x) = \int_0^x t^{a-1} \exp(-t)dt$.
 
 \subsection{Antenna Radiation Pattern}
 We introduce the antenna radiation pattern in~\cite{Energy-Efficient}:
@@ -72,6 +72,13 @@ where $P^{total}$ is the maximum transmit power per satellite.
 \subsection{Synchronization Signal Block Periodicity}
 
 During the total service time, the satellite transmits SSBs to the serving cells at specific time intervals, depending on the SSB periodicity configured for each cell. In this thesis, we adjust the SSB periodicity of each cell due to two main reasons. First, the elevation angle of the satellite changes during the service time. The smaller elevation angle it is, the more power each beam has to allocate to achieve the successful transmission. Therefore, it is essential to adjust SSB periodicity to meet the power budget requirement. Second, we adjust the SSB periodicity based on the previous UE cell searching delay performance. Thus, we adjust the SSB periodicity every epoch. During each epoch, the SSB periodicity of each cell is fixed. We then define the SSB periodicity of the cell $k$ at the $s$-th epoch as the number of slots between two consecutive SSBs that transmit to the $k$-th cell, denoted as $\theta_k[s]$. 
+% TODO:
+% Capacity (beam and periodicity)
+% fading and elevation angle
+% explaination of periodicity
+
+
+
 
 % \section{Ground Cell Model}
 
