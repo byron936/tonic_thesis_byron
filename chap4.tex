@@ -1,5 +1,54 @@
 \chapter{Proposed Algorithm}
 \label{chap:algorithm}
+\begin{algorithm}[H]
+    \caption{Resource Re-balancing Algorithm}
+    \label{alg:rebalancing_algorithm}
+    \begin{algorithmic}[1]
+        \REQUIRE{}
+
+        Total available resources $M_{total}$ (a positive integer representing the total resources),
+
+        Set of groups $\{G_l \mid l = 1, 2, \dots, |\textbf{G}|\}$ (where $|\textbf{G}|$ is the total number of groups),
+
+        For each group $l = 1$ to $|\textbf{G}|$, the estimated number of users $|G_l|^{(t)}$ at time $t$ (a non-negative integer),
+
+        Collision rate model $P_{Collision}^{G_l}(R)$ for each group $l$ (a function that computes collision rate given allocated resources $R$),
+
+        Minimum acceptable collision rate threshold $\epsilon$ (a real number, $0 < \epsilon < 1$).
+
+
+        \ENSURE
+        Optimal resource allocation vector $\{ M_{l} \}_{l=1}^{|\textbf{G}|}$
+
+        \STATE \COMMENT{\textbf{Phase I: Demand calculation and judgment}}
+        \FOR{$l = 1$ to $|\textbf{G}|$}
+        \STATE Calculate minimum resource requirement $M_{l}^{\min}$ to meet $P_{Collision}^{G_{l}} < \epsilon$
+        \ENDFOR
+        \STATE $M_{\mathrm{sum}} \gets \sum_{l=1}^{|\textbf{G}|} M_{l}^{\min}$
+
+        \IF{$M_{\mathrm{sum}} \le M_{total}$}
+        \STATE $M_{l} \gets M_{l}^{\min}$ for all $l$ \COMMENT{Resources are sufficient, direct allocation}
+        \STATE $M_{\mathrm{remaining}} \gets M_{total} - M_{\mathrm{sum}}$
+        \STATE $\text{quotient} \gets \lfloor M_{\mathrm{remaining}} / |\textbf{G}| \rfloor$ \COMMENT{Resources per group}
+        \STATE $\text{remainder} \gets M_{\mathrm{remaining}} \bmod |\textbf{G}|$ \COMMENT{Remaining resources}
+        \FOR{$l = 1$ to $|\textbf{G}|$}
+        \STATE $M_{l} \gets M_{l} + \text{quotient}$ \COMMENT{Add base allocation to each group}
+        \IF{$l \le \text{remainder}$}
+        \STATE $M_{l} \gets M_{l} + 1$ \COMMENT{Add one extra resource to first 'remainder' groups}
+        \ENDIF
+        \ENDFOR
+        \STATE \textbf{return} $\{M_{l}\}$
+        \ENDIF
+
+        \STATE \COMMENT{\textbf{Phase II: Resource rebalancing (resource shortage)}}
+        \STATE $w_l \gets |G_l|^{(t)} / \sum_{i=1}^{|\textbf{G}|} |G_i|^{(t)}$ for all $l$ \COMMENT{Calculate weight}
+        \FOR{$l = 1$ to $|\textbf{G}|$}
+        \STATE $M_{l} = w_l \cdot M_{total}$ \COMMENT{Resources allocation based on weight}
+        \ENDFOR
+
+        \STATE \textbf{return} $\{M_{l}\}$
+    \end{algorithmic}
+\end{algorithm}
 
 
 

@@ -58,20 +58,20 @@ where $k$ is the cell where user $u$ is located.
 % where $N$ is the power of the white gaussian noise, which is a random variable with mean $0$ and variance $\sigma$.
 \section{Joint Power-Periodicity Optimization on SSB}
 In this section, we will discuss how the satellite beam transmitted power and the SSB periodicity affect UE cell search delay and formulate an optimization problem. 
-\textcolor{blue}{During the total service time, it is essential to adjust the satellite beam transmitted power and the SSB periodicity because the system environment changes in real-time. The most significant change is the elevation angle of the satellite. It affects not only the transmission distance, but also the channel fading effect. However, it is not beneficial to adjust the power and periodicity each time slot. Thus, we adjust the satellite beam transmitted power and the SSB periodicity in a certain number of time slots, defined as an epoch. }We define one epoch equals to $N$ time slots, so there are $T^{total} / T^{slot} / N$ epochs in total. We denote these epochs as $\mathcal{S} = \{s\ |\ s = 1, 2, \ldots, (T^{total} / T^{slot}) / N\}$. In each epoch, the satellite beam transmitted power and the SSB periodicity remain the same. 
+\textcolor{blue}{During the total service time, it is essential to adjust the satellite beam transmitted power and the SSB periodicity because the system environment changes in real-time. The most significant change is the elevation angle of the satellite. It affects not only the transmission distance, but also the channel fading effect. However, if we adjust the power and periodicity too frequently, the computation complexity rises and the signaling overhead increases. Thus, we adjust the satellite beam transmitted power and the SSB periodicity in a certain number of time slots, defined as an epoch.} We define one epoch equals to $N$ time slots, so there are $T^{total} / T^{slot} / N$ epochs in total. We denote these epochs as $\mathcal{\widetilde{S}} = \{\mathcal{S}_i\ |\ i = 1, 2, \ldots, (T^{total} / T^{slot}) / N\}$, and $\mathcal{S}_i = \{t\ |\ t = i \cdot N + -1, 2, \ldots, (T^{total} / T^{slot}) / N\}$. In each epoch, the satellite beam transmitted power and the SSB periodicity remain the same. 
 
 \subsection{Satellite Power Constraint}
 
 \textcolor{blue}{In LEO satellite communication systems, satellites primarily rely on solar power for data transmission. Each satellite has a specific power budget, determined by the amount of solar energy it can harvest. Since the distance between space and ground is typically several hundred kilometers, transmitted signals must be strong enough to achieve the minimum signal-to-noise ratio (SNR) required on the user equipment (UE) side. Therefore, the efficient allocation of power resources to each beam under a limited power budget is a critical topic in LEO satellite communication system design.}
-We define a power budget for the satellite. Let $P_{m}[s]$ denote the transmitted power of the $m$-th beam from the satellite at time slot $t$. The aggregate transmit power of all beams on the satellite must satisfy:
+We define a power budget for the satellite. Let $P_{m}[t]$ denote the transmitted power of the $m$-th beam from the satellite at time slot $t$. The aggregate transmit power of all beams on the satellite must satisfy:
 \begin{equation}
-    \sum_{m} P_{m}[s] \leq P^{total}, \quad \forall t \in \mathcal{T}
+    \sum_{m} \sum_{t \in \mathcal{S}} P_{m}[t] \leq P^{total} \cdot N, \quad \forall \mathcal{S} \in \mathcal{\widetilde{S}}
 \end{equation}
-where $P^{total}$ is the maximum transmit power per satellite.
+where $P^{total}$ is the maximum transmit power for a satellite in one time slot.
 
 \subsection{Synchronization Signal Block Periodicity}
 
-During the total service time, the satellite transmits SSBs to the serving cells at specific time intervals, depending on the SSB periodicity configured for each cell. In this thesis, we adjust the SSB periodicity of each cell due to two main reasons. First, the elevation angle of the satellite changes during the service time. The smaller elevation angle it is, the more power each beam has to allocate to achieve the successful transmission. Therefore, it is essential to adjust SSB periodicity to meet the power budget requirement. Second, we adjust the SSB periodicity based on the previous UE cell searching delay performance. Thus, we adjust the SSB periodicity every epoch. During each epoch, the SSB periodicity of each cell is fixed. We then define the SSB periodicity of the cell $k$ at the $s$-th epoch as the number of slots between two consecutive SSBs that transmit to the $k$-th cell, denoted as $\theta_k[s]$. 
+During the total service time, the satellite transmits SSBs to the serving cells at specific time intervals, depending on the SSB periodicity configured for each cell. With longer SSB periodicity, the satellite beam has more time slots to serve other cells, and can allocate more power to each SSB signal. Thus, we adjust the SSB periodicity every epoch. During each epoch, the SSB periodicity of each cell is fixed. We then define the SSB periodicity of the cell $k$ at the $s$-th epoch as the number of slots between two consecutive SSBs that transmit to the $k$-th cell, denoted as $\theta_k[s]$. 
 % TODO:
 % Capacity (beam and periodicity)
 % fading and elevation angle
@@ -172,6 +172,7 @@ This section formulates the optimization problem based on recent 3GPP standardiz
     & \quad P_{m}[t] \geq 0, \quad \forall m \in \mathcal{M}, t \in \mathcal{T} \\
     & \quad \theta_k[s] \leq N, \quad \forall k \in \mathcal{K}, \forall s \in \mathcal{S} \\
     & \quad \theta_k[s] \in \mathbb{N}^+, \quad \forall k \in \mathcal{K}, \forall s \in \mathcal{S} \\
+    & \quad \sum_{k} \frac{1}{\theta_k[s]} \leq M, \quad \forall s \in \mathcal{S} \\ %TODO: explaination of this function
 \end{aligned}
 \end{equation}
 where $\mathbb{N}^+$ is the set with all positive integers. The mathematical fomula between transmitted power and received power is described in equation (\ref{eq:T-R}). And the mathematical derivation between the received power $\hat{P}_{m, u}[t]$, $\theta_k[s]$ and $\alpha_u[s]$ is described from equation (\ref{eq:alpha}) to equation (\ref{eq:Ru}). 
