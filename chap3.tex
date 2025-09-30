@@ -39,17 +39,16 @@ where $K = \left(\frac{2bm}{2bm+\Omega}\right)^m/2b$, $\delta = \Omega/(2bm+\Ome
 \subsection{Antenna Radiation Pattern}
 We introduce the antenna radiation pattern in~\cite{Energy-Efficient}:
 \begin{equation}
-    G(\theta_{m,u}) = G_{max} \left[ \frac{J_1\left(\mu(\theta_{m,u})\right)}{2\mu(\theta_{m,u})}
-    + 36 \frac{J_3\left(\mu(\theta_{m,u})\right)}{\mu(\theta_{m,u})^3} \right]^2
+    G(\phi_{m,u}) = G_{max} \left[ \frac{J_1\left(\mu(\phi_{m,u})\right)}{2\mu(\phi_{m,u})}
+    + 36 \frac{J_3\left(\mu(\phi_{m,u})\right)}{\mu(\phi_{m,u})^3} \right]^2
 \end{equation}
-where $\theta_{m,u}$ is the boresight angle between the user position and the beam center with respect to the satellite, $G_{max}$ is the maximum antenna gain, $\mu(\theta)$ is defined as $2.07123 \cdot \sin(\theta)/\sin(\theta_{3dB})$, $\theta_{3dB}$ is the 3 dB half-power beamwidth angle of the antenna, and $J_1(\cdot)$, $J_3(\cdot)$ are the Bessel functions of the first kind of orders 1 and 3, respectively.
+where $\phi_{m,u}$ is the boresight angle between the user position and the beam center with respect to the satellite, $G_{max}$ is the maximum antenna gain, $\mu(\phi)$ is defined as $2.07123 \cdot \sin(\phi)/\sin(\phi_{3dB})$, $\phi_{3dB}$ is the 3 dB half-power beamwidth angle of the antenna, and $J_1(\cdot)$, $J_3(\cdot)$ are the Bessel functions of the first kind of orders 1 and 3, respectively.
 
 \subsection{UE Received Power}
-In this thesis, the transmitted power of each beam is fixed during one epoch. The transmitted power of the $m$-th beam at the $s$-th epoch is denoted as $P_{m}[s]$. In the $s$-th epoch, the received power of the $u$-th user at the $t$-th time slot $\hat{P}_{m,u}[t]$ can be calculated as follows:
+In this thesis, the transmitted power of each beam is fixed during one epoch. The transmitted power to the $k$-th cell at the $\mathcal{S}_i$-th epoch is denoted as $P_{k}[\mathcal{S}_i]$. In the $\mathcal{S}_i$-th epoch, the received power of the $u$-th user in the $k$-th cell at the $t$-th time slot $\hat{P}_{k,u}[t]$ can be calculated as follows:
 \begin{equation}
-    \hat{P}_{m,u}[t] = P_{m}[s] \cdot L_{k} \cdot h_{k} \cdot G(\theta_{m,u}) \label{eq:T-R}
+    \hat{P}_{k,u}[t] = P_{k}[\mathcal{S}_i] \cdot L_{k} \cdot h_{k} \cdot G(\phi_{k,u}) \label{eq:T-R}
 \end{equation}
-where $k$ is the cell where user $u$ is located. 
 
 % We define Signal-to-Noise Ratio (SNR) of the $u$-th UE as follows:
 % \begin{equation}
@@ -58,20 +57,25 @@ where $k$ is the cell where user $u$ is located.
 % where $N$ is the power of the white gaussian noise, which is a random variable with mean $0$ and variance $\sigma$.
 \section{Joint Power-Periodicity Optimization on SSB}
 In this section, we will discuss how the satellite beam transmitted power and the SSB periodicity affect UE cell search delay and formulate an optimization problem. 
-\textcolor{blue}{During the total service time, it is essential to adjust the satellite beam transmitted power and the SSB periodicity because the system environment changes in real-time. The most significant change is the elevation angle of the satellite. It affects not only the transmission distance, but also the channel fading effect. However, if we adjust the power and periodicity too frequently, the computation complexity rises and the signaling overhead increases. Thus, we adjust the satellite beam transmitted power and the SSB periodicity in a certain number of time slots, defined as an epoch.} We define one epoch equals to $N$ time slots, so there are $T^{total} / T^{slot} / N$ epochs in total. We denote these epochs as $\mathcal{\widetilde{S}} = \{\mathcal{S}_i\ |\ i = 1, 2, \ldots, (T^{total} / T^{slot}) / N\}$, and $\mathcal{S}_i = \{t\ |\ t = i \cdot N + -1, 2, \ldots, (T^{total} / T^{slot}) / N\}$. In each epoch, the satellite beam transmitted power and the SSB periodicity remain the same. 
-
-\subsection{Satellite Power Constraint}
-
-\textcolor{blue}{In LEO satellite communication systems, satellites primarily rely on solar power for data transmission. Each satellite has a specific power budget, determined by the amount of solar energy it can harvest. Since the distance between space and ground is typically several hundred kilometers, transmitted signals must be strong enough to achieve the minimum signal-to-noise ratio (SNR) required on the user equipment (UE) side. Therefore, the efficient allocation of power resources to each beam under a limited power budget is a critical topic in LEO satellite communication system design.}
-We define a power budget for the satellite. Let $P_{m}[t]$ denote the transmitted power of the $m$-th beam from the satellite at time slot $t$. The aggregate transmit power of all beams on the satellite must satisfy:
-\begin{equation}
-    \sum_{m} \sum_{t \in \mathcal{S}} P_{m}[t] \leq P^{total} \cdot N, \quad \forall \mathcal{S} \in \mathcal{\widetilde{S}}
-\end{equation}
-where $P^{total}$ is the maximum transmit power for a satellite in one time slot.
+During the total service time, it is essential to adjust the satellite beam transmitted power and the SSB periodicity because the system environment changes in real-time. The most significant change is the elevation angle of the satellite. It affects not only the transmission distance, but also the channel fading effect. However, if we adjust the power and periodicity too frequently, the computation complexity rises and the signaling overhead increases. Thus, we adjust the satellite beam transmitted power and the SSB periodicity in a certain number of time slots, defined as an epoch. We define one epoch equals to $N$ time slots, so there are $T^{total} / T^{slot} / N$ epochs in total. The set of all epochs within the service duration is represented as $\mathcal{\widetilde{S}} = \{\mathcal{S}_i\ |\ i = 0, 1, 2, \ldots, (T^{total} / T^{slot} / N - 1)\}$, where each epoch $S_i$ encompasses the time slots from $iN$ to $(i + 1)N - 1$. By adjusting system parameters only at epoch boundaries, this approach balances real-time responsiveness against the complexity and signaling overhead associated with too frequent updates, ensuring system stability and efficient resource allocation throughout the mission duration.
 
 \subsection{Synchronization Signal Block Periodicity}
 
-During the total service time, the satellite transmits SSBs to the serving cells at specific time intervals, depending on the SSB periodicity configured for each cell. With longer SSB periodicity, the satellite beam has more time slots to serve other cells, and can allocate more power to each SSB signal. Thus, we adjust the SSB periodicity every epoch. During each epoch, the SSB periodicity of each cell is fixed. We then define the SSB periodicity of the cell $k$ at the $s$-th epoch as the number of slots between two consecutive SSBs that transmit to the $k$-th cell, denoted as $\theta_k[s]$. 
+During the total service time, the satellite transmits SSBs to the serving cells at specific time intervals, depending on the SSB periodicity configured for each cell. With longer SSB periodicity, the satellite beam has more time slots to serve other cells, and can allocate more power to each SSB signal. Thus, we adjust the SSB periodicity every epoch. During each epoch, the SSB periodicity of each cell is fixed. We then define the SSB periodicity of the cell $k$ at the $\mathcal{S}_i$-th epoch as the number of slots between two consecutive SSBs that transmit to the $k$-th cell, denoted as $\theta_k[\mathcal{S}_i]$. Since there are at most $M$ beams serving the cells in one satellite and one beam can only transmit one SSB to a cell in a time slot, we must insure that there are enough time slots to transmit all SSBs in one cycle. That is, 
+\begin{equation}
+\sum_k \frac{1}{\theta_k[\mathcal{S}_i]} \leq M, \quad \forall \mathcal{S}_i\in\mathcal{\widetilde{S}}
+\end{equation}
+
+
+\subsection{Satellite Power Budget}
+
+In LEO satellite communication systems, satellites primarily rely on solar power for data transmission. Each satellite has a specific power budget, determined by the amount of solar energy it can harvest. Since the distance between space and ground is typically several hundred kilometers, transmitted signals must be strong enough to achieve the minimum signal-to-noise ratio (SNR) required on the user equipment (UE) side. Therefore, the efficient allocation of power resources to each beam under a limited power budget is a critical topic in LEO satellite communication system design.
+We define a power budget for the satellite. Let $P_k[\mathcal{S}_i]$ denote the transmitted power to the $k$-th cell at epoch $\mathcal{S}_i$. The aggregate transmit power of all beams on the satellite must satisfy:
+\begin{equation}
+    \sum_{m} \frac{P_{k}[\mathcal{S}_i]}{\theta_k[\mathcal{S}_i]} \leq P^{total}, \quad \forall \mathcal{S}_i \in \mathcal{\widetilde{S}}
+\end{equation}
+where $P^{total}$ is the maximum transmit power for a satellite in one time slot.
+
 % TODO:
 % Capacity (beam and periodicity)
 % fading and elevation angle
@@ -123,24 +127,24 @@ During the total service time, the satellite transmits SSBs to the serving cells
 % \end{equation}
 
 \section{UE Cell Searching Delay}
-The cell searching delay $\alpha_u[s]$ for the $u$-th UE is a random variable, defined as the time duration between the start of SSB measurement and the successful reception of SSB at the $s$-th epoch.
+The cell searching delay $\alpha_u[\mathcal{S}_i]$ for the $u$-th UE is a random variable, defined as the time duration between the start of SSB measurement and the successful reception of SSB at the $\mathcal{S}_i$-th epoch.
 % , as shown in Figure~\ref{RAD}. 
-$\alpha_u[s]$ can be decomposed into two parts: $\beta_u[s]$ (initial waiting time at the $s$-th epoch) and $\gamma_u[s]$ (additional delay due to failed attempts at the $s$-th epoch). $\beta_u[s]$ is a random variable that represents the time from the start of SSB measurement to the arrival of the first SSB, and $\gamma_u[s]$ is another random variable that represents the time from the first SSB arrival to the successful SSB reception. Since the UE can start SSB measurement at any time, $\beta_u[s]$ follows uniform distribution from $0$ to $\theta_k[s]$, where $k$ represents the serving cell of $u$. $\gamma_u[s]$ is a multiple of $\theta_k[s]$, depending on the number of SSB reception failures $Q_u[s]$, which is a discrete random variable. If the received SSB power at the $t$-th time slot $\hat{P}_{m, u}[t]$ is less than the threshold $P^{th}$, the UE fails to measure SSB. The probability that the received SSB power is less than $P^{th}$ at the $t$-th time slot is denoted as $R_u[t]$. The mathematical formulation is as follows:
+$\alpha_u[\mathcal{S}_i]$ can be decomposed into two parts: $\beta_u[\mathcal{S}_i]$ (initial waiting time at the $\mathcal{S}_i$-th epoch) and $\gamma_u[\mathcal{S}_i]$ (additional delay due to failed attempts at the $\mathcal{S}_i$-th epoch). $\beta_u[\mathcal{S}_i]$ is a random variable that represents the time from the start of SSB measurement to the arrival of the first SSB, and $\gamma_u[\mathcal{S}_i]$ is another random variable that represents the time from the first SSB arrival to the successful SSB reception. Since the UE can start SSB measurement at any time, $\beta_u[\mathcal{S}_i]$ follows uniform distribution from $0$ to $\theta_k[\mathcal{S}_i]$, where $k$ represents the serving cell of $u$. $\gamma_u[\mathcal{S}_i]$ is a multiple of $\theta_k[\mathcal{S}_i]$, depending on the number of SSB reception failures $Q_u[\mathcal{S}_i]$, which is a discrete random variable. If the received SSB power at the $t$-th time slot $\hat{P}_{m, u}[t]$ is less than the threshold $P^{th}$, the UE fails to measure SSB. The probability that the received SSB power is less than $P^{th}$ at the $t$-th time slot is denoted as $R_u[t]$. The mathematical formulation is as follows:
 \begin{equation}
-    \alpha_u[s] = \beta_u[s] + \gamma_u[s] \label{eq:alpha}
+    \alpha_u[\mathcal{S}_i] = \beta_u[\mathcal{S}_i] + \gamma_u[\mathcal{S}_i] \label{eq:alpha}
 \end{equation}
 \begin{equation}
-    F_{\beta_u[s]}(x) =
+    F_{\beta_u[\mathcal{S}_i]}(x) =
     \begin{cases}
-        \frac{x}{\theta_k[s]}, & 0 \leq x < \theta_k[s] \\
-        1, & x \geq \theta_k[s] \\
+        \frac{x}{\theta_k[\mathcal{S}_i]}, & 0 \leq x < \theta_k[\mathcal{S}_i] \\
+        1, & x \geq \theta_k[\mathcal{S}_i] \\
         0, & \text{otherwise}
     \end{cases}
 \end{equation}
 \begin{equation}
-    \gamma_u[s] = Q_u[s] \cdot \theta_k[s]
+    \gamma_u[\mathcal{S}_i] = Q_u[\mathcal{S}_i] \cdot \theta_k[\mathcal{S}_i]
 \end{equation}
-where $F_{\beta_u[s]}(x)$ is the CDF of $\beta_u[s]$. To calculate the Probability Mass Function (PMF) of $Q_u[s]$, we denote the $u$-th UE fails to measure $n$ SSBs at $t_1, t_2, \ldots, t_n$ time slots, and successfully receives SSB at time slot $t_{n+1}$. The PMF of $Q_u[s]$ can be express as follows: 
+where $F_{\beta_u[\mathcal{S}_i]}(x)$ is the CDF of $\beta_u[\mathcal{S}_i]$. To calculate the Probability Mass Function (PMF) of $Q_u[\mathcal{S}_i]$, we denote the $u$-th UE fails to measure $n$ SSBs at $t_1, t_2, \ldots, t_n$ time slots, and successfully receives SSB at time slot $t_{n+1}$. The PMF of $Q_u[\mathcal{S}_i]$ can be express as follows: 
 \begin{equation}
     \Pr\{Q_u[s] = n\} = (1 - R_u[t_{n+1}]) \prod_{i=1}^n R_u[t_i]
 \end{equation}
@@ -164,17 +168,30 @@ $R_u[t]$ can be expressed by $F_{h_k}$ as follows:
 \section{Problem Formulation}
 This section formulates the optimization problem based on recent 3GPP standardization discussions. The main challenge is to provide SSBs to as many cells as possible with limited satellite power. Extending the SSB periodicity for some cells increases UE random access delay, but it saves more power so that there would be other cells to be served. On the other hand, shortening the SSB periodicity reduces the UE cell searching delay, but the serving cells might be less because of the power budget. The transmitted SSB power also affects the success probability of the cell searching delay. The trade-off among power allocation, SSB periodicity, and UE cell searching delay is modeled as follows:
 
-\begin{equation}
-\begin{aligned}
-    & \underset{P, \theta}{\text{min}} \sum_{u \in \mathcal{U}} \sum_{s \in \mathcal{S}} E[{\alpha_u[s]}] \\
-    & \text{subject to} \\
-    & \quad \sum_{m} P_{m}[t] \leq P^{total}, \quad \forall t \in \mathcal{T} \\
-    & \quad P_{m}[t] \geq 0, \quad \forall m \in \mathcal{M}, t \in \mathcal{T} \\
-    & \quad \theta_k[s] \leq N, \quad \forall k \in \mathcal{K}, \forall s \in \mathcal{S} \\
-    & \quad \theta_k[s] \in \mathbb{N}^+, \quad \forall k \in \mathcal{K}, \forall s \in \mathcal{S} \\
-    & \quad \sum_{k} \frac{1}{\theta_k[s]} \leq M, \quad \forall s \in \mathcal{S} \\ %TODO: explaination of this function
-\end{aligned}
-\end{equation}
+% \begin{equation}
+% \begin{aligned}
+%     & \underset{P, \theta}{\text{min}} \sum_{u \in \mathcal{U}} \sum_{s \in \mathcal{S}} E[{\alpha_u[s]}] \\
+%     & \text{subject to} \\
+%     & \quad \sum_{m} P_{m}[t] \leq P^{total}, \quad \forall t \in \mathcal{T} \\
+%     & \quad P_{m}[t] \geq 0, \quad \forall m \in \mathcal{M}, t \in \mathcal{T} \\
+%     & \quad \theta_k[s] \leq N, \quad \forall k \in \mathcal{K}, \forall s \in \mathcal{S} \\
+%     & \quad \theta_k[s] \in \mathbb{N}^+, \quad \forall k \in \mathcal{K}, \forall s \in \mathcal{S} \\
+%     & \quad \sum_{k} \frac{1}{\theta_k[s]} \leq M, \quad \forall s \in \mathcal{S} \\ %TODO: explaination of this function
+% \end{aligned}
+% \end{equation}
+
+\begin{subequations} \label{eq:main}
+\begin{align}
+    &\min_{P,\,\theta} \sum_{u} \sum_{s\in S} \mathbb{E}[\alpha_u[s]] \\ 
+    &\text{subject to} \nonumber \\
+    &\sum_{m} \frac{P_{k}[\mathcal{S}_i]}{\theta_k[\mathcal{S}_i]} \leq P^{total}, \quad \forall \mathcal{S}_i \in \mathcal{\widetilde{S}} \label{eq:power_constraint} \\ 
+    &P_k[\mathcal{S}_i]\geq 0, \quad \forall k\in\mathcal{K}, \mathcal{S}_i\in\mathcal{\widetilde{S}} \label{eq:power_nonnegative} \\
+    &\theta_k[\mathcal{S}_i] \leq N, \quad \forall k\in\mathcal{K}, \mathcal{S}_i\in\mathcal{\widetilde{S}} \label{eq:theta_upper} \\
+    &\theta_k[\mathcal{S}_i] \in \mathbb{N}^+, \quad \forall k\in\mathcal{K}, \mathcal{S}_i\in\mathcal{\widetilde{S}} \label{eq:theta_positive} \\
+    &\sum_k \frac{1}{\theta_k[\mathcal{S}_i]} \leq M, \quad \forall \mathcal{S}_i\in\mathcal{\widetilde{S}} \label{eq:sum_constraint}
+\end{align}
+\end{subequations}
+
 where $\mathbb{N}^+$ is the set with all positive integers. The mathematical fomula between transmitted power and received power is described in equation (\ref{eq:T-R}). And the mathematical derivation between the received power $\hat{P}_{m, u}[t]$, $\theta_k[s]$ and $\alpha_u[s]$ is described from equation (\ref{eq:alpha}) to equation (\ref{eq:Ru}). 
 
 % \section{List of Symbols}

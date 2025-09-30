@@ -1,54 +1,116 @@
 \chapter{Proposed Algorithm}
 \label{chap:algorithm}
+Alternating optimization is a widely used strategy for non-convex problems that involve multiple variables or mixed types of parameters. The core idea is to decompose the original challenging joint optimization into two or more easier subproblems, which are solved iteratively. In our problem, we first fix the power allocation $P$ and optimize the SSB periodicity $\theta$. Then, we fix the SSB periodicity $\theta$ and optimize the power allocation $P$. This process repeats until convergence. Thus, the problem (\ref{eq:main}) can be devided to two subproblems. 
+
+\section{Fix Power Optimize SSB Periodicity}
+
+\begin{subequations} \label{eq:FPOS}
+\begin{align}
+    &\min_{\theta} \sum_{u} \sum_{s\in S} \mathbb{E}[\alpha_u[s]] \\ 
+    &\text{subject to} \nonumber \\
+    &\theta_k[\mathcal{S}_i] \leq N, \quad \forall k\in\mathcal{K}, \mathcal{S}_i\in\mathcal{\widetilde{S}} \\
+    &\theta_k[\mathcal{S}_i] \in \mathbb{N}^+, \quad \forall k\in\mathcal{K}, \mathcal{S}_i\in\mathcal{\widetilde{S}} \\
+    &\sum_k \frac{1}{\theta_k[\mathcal{S}_i]} \leq M, \quad \forall \mathcal{S}_i\in\mathcal{\widetilde{S}}
+\end{align}
+\end{subequations}
+
 \begin{algorithm}[H]
-    \caption{Resource Re-balancing Algorithm}
-    \label{alg:rebalancing_algorithm}
+    \caption{Fix Power, Optimize SSB Periodicity}
+    \label{alg:FPOS}
     \begin{algorithmic}[1]
         \REQUIRE{}
-
-        Total available resources $M_{total}$ (a positive integer representing the total resources),
-
-        Set of groups $\{G_l \mid l = 1, 2, \dots, |\textbf{G}|\}$ (where $|\textbf{G}|$ is the total number of groups),
-
-        For each group $l = 1$ to $|\textbf{G}|$, the estimated number of users $|G_l|^{(t)}$ at time $t$ (a non-negative integer),
-
-        Collision rate model $P_{Collision}^{G_l}(R)$ for each group $l$ (a function that computes collision rate given allocated resources $R$),
-
-        Minimum acceptable collision rate threshold $\epsilon$ (a real number, $0 < \epsilon < 1$).
-
-
+        Given the transmission power $P_{k, \mathcal{S}_i}$ for each cell $k$ at each epoch $\mathcal{S}_i$, as well as the user distribution.
         \ENSURE
-        Optimal resource allocation vector $\{ M_{l} \}_{l=1}^{|\textbf{G}|}$
-
-        \STATE \COMMENT{\textbf{Phase I: Demand calculation and judgment}}
-        \FOR{$l = 1$ to $|\textbf{G}|$}
-        \STATE Calculate minimum resource requirement $M_{l}^{\min}$ to meet $P_{Collision}^{G_{l}} < \epsilon$
+        Find and assign the optimal SSB periodicity $\theta_{k,\mathcal{S}_i}$for each cell, such that the user access delay is minimized while the periodicity configuration for all cells meets the available resource constraints.
+        \FOR{every epoch $\mathcal{S}_i$}
+        \STATE initialize the SSB periodicity $\theta_{k,\mathcal{S}_i}$ for all cells $k$. 
+        \STATE Compute the expected random access delay $\mathbb{E}[\alpha_u[s]]$ for each UE. 
+        \STATE According to the periodicity formulas (3.7~3.11), combine transmission power, path loss, and antenna gain to calculate the success probability of SSB reception for each cell.
+        \STATE Continuously adjust $\theta_{k,\mathcal{S}_i}$ such that the delay and the resource constraint are satisfied.
+        \STATE Finally, obtain the periodicity allocation that yields the minimum delay.
         \ENDFOR
-        \STATE $M_{\mathrm{sum}} \gets \sum_{l=1}^{|\textbf{G}|} M_{l}^{\min}$
-
-        \IF{$M_{\mathrm{sum}} \le M_{total}$}
-        \STATE $M_{l} \gets M_{l}^{\min}$ for all $l$ \COMMENT{Resources are sufficient, direct allocation}
-        \STATE $M_{\mathrm{remaining}} \gets M_{total} - M_{\mathrm{sum}}$
-        \STATE $\text{quotient} \gets \lfloor M_{\mathrm{remaining}} / |\textbf{G}| \rfloor$ \COMMENT{Resources per group}
-        \STATE $\text{remainder} \gets M_{\mathrm{remaining}} \bmod |\textbf{G}|$ \COMMENT{Remaining resources}
-        \FOR{$l = 1$ to $|\textbf{G}|$}
-        \STATE $M_{l} \gets M_{l} + \text{quotient}$ \COMMENT{Add base allocation to each group}
-        \IF{$l \le \text{remainder}$}
-        \STATE $M_{l} \gets M_{l} + 1$ \COMMENT{Add one extra resource to first 'remainder' groups}
-        \ENDIF
-        \ENDFOR
-        \STATE \textbf{return} $\{M_{l}\}$
-        \ENDIF
-
-        \STATE \COMMENT{\textbf{Phase II: Resource rebalancing (resource shortage)}}
-        \STATE $w_l \gets |G_l|^{(t)} / \sum_{i=1}^{|\textbf{G}|} |G_i|^{(t)}$ for all $l$ \COMMENT{Calculate weight}
-        \FOR{$l = 1$ to $|\textbf{G}|$}
-        \STATE $M_{l} = w_l \cdot M_{total}$ \COMMENT{Resources allocation based on weight}
-        \ENDFOR
-
-        \STATE \textbf{return} $\{M_{l}\}$
     \end{algorithmic}
 \end{algorithm}
+
+\section{Fix SSB Periodicity Optimize Power}
+
+\begin{subequations} \label{eq:main}
+\begin{align}
+    &\min_{P} \sum_{u} \sum_{s\in S} \mathbb{E}[\alpha_u[s]] \\ 
+    &\text{subject to} \nonumber \\
+    &\sum_{m} \frac{P_{k}[\mathcal{S}_i]}{\theta_k[\mathcal{S}_i]} \leq P^{total}, \quad \forall \mathcal{S}_i \in \mathcal{\widetilde{S}}  \\ 
+    &P_k[\mathcal{S}_i]\geq 0, \quad \forall k\in\mathcal{K}, \mathcal{S}_i\in\mathcal{\widetilde{S}}
+\end{align}
+\end{subequations}
+
+\begin{algorithm}[H]
+    \caption{Fix SSB Periodicity, Optimize Power}
+    \label{alg:FSOP}
+    \begin{algorithmic}[1]
+        \REQUIRE{}
+        Given the transmission power $\theta_{k,\mathcal{S}_i}$ for each cell $k$ at each epoch $\mathcal{S}_i$, as well as the user distribution.
+        \ENSURE
+        Find and assign the optimal SSB periodicity $P_{k, \mathcal{S}_i}$ for each cell, such that the user access delay is minimized while the periodicity configuration for all cells meets the available resource constraints.
+        \FOR{every epoch $\mathcal{S}_i$}
+        \STATE initialize the transmit power $P_{k, \mathcal{S}_i}$ for all cells $k$. 
+        \STATE Compute the expected random access delay $\mathbb{E}[\alpha_u[s]]$ for each UE. 
+        \STATE According to the periodicity formulas (3.7~3.11), combine transmission power, path loss, and antenna gain to calculate the success probability of SSB reception for each cell.
+        \STATE Continuously adjust $P_{k, \mathcal{S}_i}$ such that the delay and the resource constraint are satisfied.
+        \STATE Finally, obtain the power allocation that yields the minimum delay.
+        \ENDFOR
+    \end{algorithmic}
+\end{algorithm}
+
+
+% \begin{algorithm}[H]
+% \caption{Resource Re-balancing Algorithm}
+% \label{alg:rebalancing_algorithm}
+% \begin{algorithmic}[1]
+% \REQUIRE{}
+
+% Total available resources $M_{total}$ (a positive integer representing the total resources),
+
+% Set of groups $\{G_l \mid l = 1, 2, \dots, |\textbf{G}|\}$ (where $|\textbf{G}|$ is the total number of groups),
+
+% For each group $l = 1$ to $|\textbf{G}|$, the estimated number of users $|G_l|^{(t)}$ at time $t$ (a non-negative integer),
+
+% Collision rate model $P_{Collision}^{G_l}(R)$ for each group $l$ (a function that computes collision rate given allocated resources $R$),
+
+% Minimum acceptable collision rate threshold $\epsilon$ (a real number, $0 < \epsilon < 1$).
+
+
+% \ENSURE
+% Optimal resource allocation vector $\{ M_{l} \}_{l=1}^{|\textbf{G}|}$
+
+% \STATE \COMMENT{\textbf{Phase I: Demand calculation and judgment}}
+% \FOR{$l = 1$ to $|\textbf{G}|$}
+% \STATE Calculate minimum resource requirement $M_{l}^{\min}$ to meet $P_{Collision}^{G_{l}} < \epsilon$
+% \ENDFOR
+% \STATE $M_{\mathrm{sum}} \gets \sum_{l=1}^{|\textbf{G}|} M_{l}^{\min}$
+
+% \IF{$M_{\mathrm{sum}} \le M_{total}$}
+% \STATE $M_{l} \gets M_{l}^{\min}$ for all $l$ \COMMENT{Resources are sufficient, direct allocation}
+% \STATE $M_{\mathrm{remaining}} \gets M_{total} - M_{\mathrm{sum}}$
+% \STATE $\text{quotient} \gets \lfloor M_{\mathrm{remaining}} / |\textbf{G}| \rfloor$ \COMMENT{Resources per group}
+% \STATE $\text{remainder} \gets M_{\mathrm{remaining}} \bmod |\textbf{G}|$ \COMMENT{Remaining resources}
+% \FOR{$l = 1$ to $|\textbf{G}|$}
+% \STATE $M_{l} \gets M_{l} + \text{quotient}$ \COMMENT{Add base allocation to each group}
+% \IF{$l \le \text{remainder}$}
+% \STATE $M_{l} \gets M_{l} + 1$ \COMMENT{Add one extra resource to first 'remainder' groups}
+% \ENDIF
+% \ENDFOR
+% \STATE \textbf{return} $\{M_{l}\}$
+% \ENDIF
+
+% \STATE \COMMENT{\textbf{Phase II: Resource rebalancing (resource shortage)}}
+% \STATE $w_l \gets |G_l|^{(t)} / \sum_{i=1}^{|\textbf{G}|} |G_i|^{(t)}$ for all $l$ \COMMENT{Calculate weight}
+% \FOR{$l = 1$ to $|\textbf{G}|$}
+% \STATE $M_{l} = w_l \cdot M_{total}$ \COMMENT{Resources allocation based on weight}
+% \ENDFOR
+
+% \STATE \textbf{return} $\{M_{l}\}$
+% \end{algorithmic}
+% \end{algorithm}
 
 
 
