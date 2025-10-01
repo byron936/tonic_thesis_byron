@@ -127,8 +127,13 @@ where $P^{total}$ is the maximum transmit power for a satellite in one time slot
 % \end{equation}
 
 \section{UE Cell Searching Delay}
-The cell searching delay $\alpha_u[\mathcal{S}_i]$ for the $u$-th UE is a random variable, defined as the time duration between the start of SSB measurement and the successful reception of SSB at the $\mathcal{S}_i$-th epoch.
-% , as shown in Figure~\ref{RAD}. 
+The cell searching delay $\alpha_u[\mathcal{S}_i]$ for the $u$-th UE is a random variable, defined as the time duration between the start of SSB measurement and the successful reception of SSB at the $\mathcal{S}_i$-th epoch, as shown in Figure~\ref{RAD}. 
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figure/random access delay.pdf}
+    \caption{Illustration of random access delay at $\mathcal{S}_i$-th epoch}
+    \label{RAD}
+\end{figure}
 $\alpha_u[\mathcal{S}_i]$ can be decomposed into two parts: $\beta_u[\mathcal{S}_i]$ (initial waiting time at the $\mathcal{S}_i$-th epoch) and $\gamma_u[\mathcal{S}_i]$ (additional delay due to failed attempts at the $\mathcal{S}_i$-th epoch). $\beta_u[\mathcal{S}_i]$ is a random variable that represents the time from the start of SSB measurement to the arrival of the first SSB, and $\gamma_u[\mathcal{S}_i]$ is another random variable that represents the time from the first SSB arrival to the successful SSB reception. Since the UE can start SSB measurement at any time, $\beta_u[\mathcal{S}_i]$ follows uniform distribution from $0$ to $\theta_k[\mathcal{S}_i]$, where $k$ represents the serving cell of $u$. $\gamma_u[\mathcal{S}_i]$ is a multiple of $\theta_k[\mathcal{S}_i]$, depending on the number of SSB reception failures $Q_u[\mathcal{S}_i]$, which is a discrete random variable. If the received SSB power at the $t$-th time slot $\hat{P}_{m, u}[t]$ is less than the threshold $P^{th}$, the UE fails to measure SSB. The probability that the received SSB power is less than $P^{th}$ at the $t$-th time slot is denoted as $R_u[t]$. The mathematical formulation is as follows:
 \begin{equation}
     \alpha_u[\mathcal{S}_i] = \beta_u[\mathcal{S}_i] + \gamma_u[\mathcal{S}_i] \label{eq:alpha}
@@ -146,15 +151,15 @@ $\alpha_u[\mathcal{S}_i]$ can be decomposed into two parts: $\beta_u[\mathcal{S}
 \end{equation}
 where $F_{\beta_u[\mathcal{S}_i]}(x)$ is the CDF of $\beta_u[\mathcal{S}_i]$. To calculate the Probability Mass Function (PMF) of $Q_u[\mathcal{S}_i]$, we denote the $u$-th UE fails to measure $n$ SSBs at $t_1, t_2, \ldots, t_n$ time slots, and successfully receives SSB at time slot $t_{n+1}$. The PMF of $Q_u[\mathcal{S}_i]$ can be express as follows: 
 \begin{equation}
-    \Pr\{Q_u[s] = n\} = (1 - R_u[t_{n+1}]) \prod_{i=1}^n R_u[t_i]
+    \Pr\{Q_u[\mathcal{S}_i] = n\} = (1 - R_u[t_{n+1}]) \prod_{i=1}^n R_u[t_i]
 \end{equation}
 $R_u[t]$ can be expressed by $F_{h_k}$ as follows:
 \begin{equation}
     \begin{aligned}
         R_u[t]
-        &= \Pr\{\hat{P}_{m, u}[t] < P^{th}\} \\
-        &= \Pr\{h_k < \frac{P^{th}}{P_m[t] \cdot L_k \cdot G(\theta_{m, u})}\} \\
-        &= F_{h_k}(\frac{P^{th}}{P_m[t] \cdot L_k \cdot G(\theta_{m, u})})
+        &= \Pr\{\hat{P}_{k, u}[t] < P^{th}\} \\
+        &= \Pr\{h_k < \frac{P^{th}}{P_k[\mathcal{S}_i] \cdot L_k \cdot G(\phi_{m, u})}\} \\
+        &= F_{h_k}(\frac{P^{th}}{P_k[\mathcal{S}_i] \cdot L_k \cdot G(\phi_{m, u})})
     \end{aligned} \label{eq:Ru}
 \end{equation}
 
@@ -182,7 +187,7 @@ This section formulates the optimization problem based on recent 3GPP standardiz
 
 \begin{subequations} \label{eq:main}
 \begin{align}
-    &\min_{P,\,\theta} \sum_{u} \sum_{s\in S} \mathbb{E}[\alpha_u[s]] \\ 
+    &\min_{P,\,\theta} \sum_{u} \sum_{\mathcal{S}_i\in \mathcal{\widetilde{S}}} \mathbb{E}[\alpha_u[\mathcal{S}_i]] \\ 
     &\text{subject to} \nonumber \\
     &\sum_{m} \frac{P_{k}[\mathcal{S}_i]}{\theta_k[\mathcal{S}_i]} \leq P^{total}, \quad \forall \mathcal{S}_i \in \mathcal{\widetilde{S}} \label{eq:power_constraint} \\ 
     &P_k[\mathcal{S}_i]\geq 0, \quad \forall k\in\mathcal{K}, \mathcal{S}_i\in\mathcal{\widetilde{S}} \label{eq:power_nonnegative} \\

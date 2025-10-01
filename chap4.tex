@@ -6,13 +6,15 @@ Alternating optimization is a widely used strategy for non-convex problems that 
 
 \begin{subequations} \label{eq:FPOS}
 \begin{align}
-    &\min_{\theta} \sum_{u} \sum_{s\in S} \mathbb{E}[\alpha_u[s]] \\ 
+    &\min_{\theta} \sum_{u} \sum_{\mathcal{S}_i\in \mathcal{\widetilde{S}}} \mathbb{E}[\alpha_u[\mathcal{S}_i]] \\ 
     &\text{subject to} \nonumber \\
     &\theta_k[\mathcal{S}_i] \leq N, \quad \forall k\in\mathcal{K}, \mathcal{S}_i\in\mathcal{\widetilde{S}} \\
     &\theta_k[\mathcal{S}_i] \in \mathbb{N}^+, \quad \forall k\in\mathcal{K}, \mathcal{S}_i\in\mathcal{\widetilde{S}} \\
     &\sum_k \frac{1}{\theta_k[\mathcal{S}_i]} \leq M, \quad \forall \mathcal{S}_i\in\mathcal{\widetilde{S}}
 \end{align}
 \end{subequations}
+
+We use Genetic Algorithm to solve this problem:
 
 \begin{algorithm}[H]
     \caption{Fix Power, Optimize SSB Periodicity}
@@ -21,14 +23,28 @@ Alternating optimization is a widely used strategy for non-convex problems that 
         \REQUIRE{}
         Given the transmission power $P_{k, \mathcal{S}_i}$ for each cell $k$ at each epoch $\mathcal{S}_i$, as well as the user distribution.
         \ENSURE
-        Find and assign the optimal SSB periodicity $\theta_{k,\mathcal{S}_i}$for each cell, such that the user access delay is minimized while the periodicity configuration for all cells meets the available resource constraints.
-        \FOR{every epoch $\mathcal{S}_i$}
-        \STATE initialize the SSB periodicity $\theta_{k,\mathcal{S}_i}$ for all cells $k$. 
-        \STATE Compute the expected random access delay $\mathbb{E}[\alpha_u[s]]$ for each UE. 
-        \STATE According to the periodicity formulas (3.7~3.11), combine transmission power, path loss, and antenna gain to calculate the success probability of SSB reception for each cell.
-        \STATE Continuously adjust $\theta_{k,\mathcal{S}_i}$ such that the delay and the resource constraint are satisfied.
-        \STATE Finally, obtain the periodicity allocation that yields the minimum delay.
+        Find and assign the optimal SSB periodicity $\theta_{k,\mathcal{S}_i}$ for each cell, such that the user access delay is minimized while the periodicity configuration for all cells meets the available resource constraints.
+        % \FOR{every epoch $\mathcal{S}_i$}
+        % \STATE initialize the SSB periodicity $\theta_{k,\mathcal{S}_i}$ for all cells $k$. 
+        % \STATE Compute the expected random access delay $\mathbb{E}[\alpha_u[s]]$ for each UE. 
+        % \STATE According to the periodicity formulas (3.7~3.11), combine transmission power, path loss, and antenna gain to calculate the success probability of SSB reception for each cell.
+        % \STATE Continuously adjust $\theta_{k,\mathcal{S}_i}$ such that the delay and the resource constraint are satisfied.
+        % \STATE Finally, obtain the periodicity allocation that yields the minimum delay.
+        % \ENDFOR
+        \STATE Generate initial population of candidate solutions with size $POP\_SIZE$.
+        \STATE Each individual is a vector of integers $\theta_k[\mathcal{S}_i]$ within constraints. 
+        \FOR{generation = 1 to max\_generations}
+            \FOR{each individual in population}
+                \STATE Compute $\mathbb{E}[\alpha_u[\mathcal{S}_i]]$ by (3.7)-(3.11)
+                \STATE Assign fitness = $1 / \mathbb{E}[\alpha_u[\mathcal{S}_i]]$
+            \ENDFOR
+            \STATE Select parents based on fitness
+            \STATE Apply crossover to produce offspring
+            \STATE Apply mutation to offspring within constraints
+            \STATE Calculate fitness for offspring
+            \STATE Select next generation population from parents and offspring
         \ENDFOR
+        \STATE \textbf{return} individual with best fitness as optimal periodicity vector
     \end{algorithmic}
 \end{algorithm}
 
@@ -36,12 +52,13 @@ Alternating optimization is a widely used strategy for non-convex problems that 
 
 \begin{subequations} \label{eq:main}
 \begin{align}
-    &\min_{P} \sum_{u} \sum_{s\in S} \mathbb{E}[\alpha_u[s]] \\ 
-    &\text{subject to} \nonumber \\
+    &\min_{P} \sum_{u} \sum_{\mathcal{S}_i\in \mathcal{\widetilde{S}}} \mathbb{E}[\alpha_u[\mathcal{S}_i]] \\
     &\sum_{m} \frac{P_{k}[\mathcal{S}_i]}{\theta_k[\mathcal{S}_i]} \leq P^{total}, \quad \forall \mathcal{S}_i \in \mathcal{\widetilde{S}}  \\ 
     &P_k[\mathcal{S}_i]\geq 0, \quad \forall k\in\mathcal{K}, \mathcal{S}_i\in\mathcal{\widetilde{S}}
 \end{align}
 \end{subequations}
+
+We use Simulated Annealing to solve this problem:
 
 \begin{algorithm}[H]
     \caption{Fix SSB Periodicity, Optimize Power}
@@ -51,13 +68,29 @@ Alternating optimization is a widely used strategy for non-convex problems that 
         Given the transmission power $\theta_{k,\mathcal{S}_i}$ for each cell $k$ at each epoch $\mathcal{S}_i$, as well as the user distribution.
         \ENSURE
         Find and assign the optimal SSB periodicity $P_{k, \mathcal{S}_i}$ for each cell, such that the user access delay is minimized while the periodicity configuration for all cells meets the available resource constraints.
-        \FOR{every epoch $\mathcal{S}_i$}
-        \STATE initialize the transmit power $P_{k, \mathcal{S}_i}$ for all cells $k$. 
-        \STATE Compute the expected random access delay $\mathbb{E}[\alpha_u[s]]$ for each UE. 
-        \STATE According to the periodicity formulas (3.7~3.11), combine transmission power, path loss, and antenna gain to calculate the success probability of SSB reception for each cell.
-        \STATE Continuously adjust $P_{k, \mathcal{S}_i}$ such that the delay and the resource constraint are satisfied.
-        \STATE Finally, obtain the power allocation that yields the minimum delay.
-        \ENDFOR
+        % \FOR{every epoch $\mathcal{S}_i$}
+        % \STATE initialize the transmit power $P_{k, \mathcal{S}_i}$ for all cells $k$. 
+        % \STATE Compute the expected random access delay $\mathbb{E}[\alpha_u[s]]$ for each UE. 
+        % \STATE According to the periodicity formulas (3.7~3.11), combine transmission power, path loss, and antenna gain to calculate the success probability of SSB reception for each cell.
+        % \STATE Continuously adjust $P_{k, \mathcal{S}_i}$ such that the delay and the resource constraint are satisfied.
+        % \STATE Finally, obtain the power allocation that yields the minimum delay.
+        % \ENDFOR
+        
+        % \STATE \textbf{Input:} Fixed SSB periodicity $\text{Periodicity} = \{period_k\}$ for cells $k=1 \dots K$
+        \STATE Initialize current solution $P_{current}$ with feasible power allocation
+        \STATE Calculate $current\_delay$ $\mathbb{E}[\alpha_u[\mathcal{S}_i]]$ for $P_{current}$
+        \STATE Initialize temperature $T \gets T_{max}$, cooling rate $0 < \alpha < 1$
+        \WHILE{$T > T_{min}$}
+            \STATE Generate new solution $P_{new}$ by perturbing $P_{current}$ within constraints
+            \STATE Calculate $new\_delay$ for $P_{new}$
+            \IF{$new\_delay < current\_delay$}
+                \STATE Accept $P_{new}$: $P_{current} \gets P_{new}$, $current\_delay \gets new\_delay$
+            \ELSE
+                \STATE Accept $P_{new}$ with probability $\exp\left(-\frac{new\_delay - current\_delay}{T}\right)$
+            \ENDIF
+            \STATE Update temperature $T \gets \alpha \times T$
+        \ENDWHILE
+        \STATE \textbf{return} $P_{current}$ as optimized power allocation
     \end{algorithmic}
 \end{algorithm}
 
@@ -112,5 +145,9 @@ Alternating optimization is a widely used strategy for non-convex problems that 
 % \end{algorithmic}
 % \end{algorithm}
 
-
+\section{Future Work}
+\begin{enumerate}
+    \item calculate the results of the two algorithms.
+    \item explain why these are best algorithms for this problem. 
+\end{enumerate}
 
