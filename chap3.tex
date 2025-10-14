@@ -39,10 +39,10 @@ where $K = \left(\frac{2bm}{2bm+\Omega}\right)^m/2b$, $\delta = \Omega/(2bm+\Ome
 \subsection{Antenna Radiation Pattern}
 We introduce the antenna radiation pattern in~\cite{Energy-Efficient}:
 \begin{equation}
-    G(\phi_{m,u}) = G_{max} \left[ \frac{J_1\left(\mu(\phi_{m,u})\right)}{2\mu(\phi_{m,u})}
-    + 36 \frac{J_3\left(\mu(\phi_{m,u})\right)}{\mu(\phi_{m,u})^3} \right]^2
+    G(\phi_{k,u}) = G_{max} \left[ \frac{J_1\left(\mu(\phi_{k,u})\right)}{2\mu(\phi_{k,u})}
+    + 36 \frac{J_3\left(\mu(\phi_{k,u})\right)}{\mu(\phi_{k,u})^3} \right]^2
 \end{equation}
-where $\phi_{m,u}$ is the boresight angle between the user position and the beam center with respect to the satellite, $G_{max}$ is the maximum antenna gain, $\mu(\phi)$ is defined as $2.07123 \cdot \sin(\phi)/\sin(\phi_{3dB})$, $\phi_{3dB}$ is the 3 dB half-power beamwidth angle of the antenna, and $J_1(\cdot)$, $J_3(\cdot)$ are the Bessel functions of the first kind of orders 1 and 3, respectively.
+where $\phi_{k,u}$ is the boresight angle between the user position and the cell center with respect to the satellite, $G_{max}$ is the maximum antenna gain, $\mu(\phi)$ is defined as $2.07123 \cdot \sin(\phi)/\sin(\phi_{3dB})$, $\phi_{3dB}$ is the 3 dB half-power beamwidth angle of the antenna, and $J_1(\cdot)$, $J_3(\cdot)$ are the Bessel functions of the first kind of orders 1 and 3, respectively.
 
 \subsection{UE Received Power}
 In this thesis, the transmitted power of each beam is fixed during one epoch. The transmitted power to the $k$-th cell at the $\mathcal{S}_i$-th epoch is denoted as $P_{k}[\mathcal{S}_i]$. In the $\mathcal{S}_i$-th epoch, the received power of the $u$-th user in the $k$-th cell at the $t$-th time slot $\hat{P}_{k,u}[t]$ can be calculated as follows:
