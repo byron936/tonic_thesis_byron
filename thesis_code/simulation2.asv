@@ -1,7 +1,8 @@
 % TODO: increase K
-% TODO: define received antenna gain
+% TODO: define Tx/Rx antenna gain
+% TODO: figure out why no convergence
 % Parameters (to define as per your problem instance)
-K = 8; % Number of cells
+
 S = 5; % Number of epochs
 POP_SIZE = 100; 
 MAX_GEN = 100;
@@ -15,81 +16,63 @@ P_total = 1000; % Total power budget
 % Example input: fixed initial power allocation P (K x S matrix)
 P = repmat(P_total/K, K, S); 
 
-ue_tbl = readmatrix('ue_positions_3d.csv'); % [UE_ID, Cell_ID, X_m, Y_m, Z_m]
+pop_den = readmatrix('population_density.txt');
 sat_tbl = readmatrix('satellite_positions_3d.csv'); % [Time_Slot, X_m, Y_m, Z_m]
 cell_tbl = readmatrix('cell_center_positions_3d.csv'); % [Index, X(m), Y(m), Z(m)]
 
-% Example input: user distribution and other system parameters
-U = size(ue_tbl, 1);               % Number of UEs
+U = sum(pop_den);
+K = length(pop_den);
 total_slots = size(sat_tbl, 1);    % Number of time slots
 
-ue_positions = ue_tbl(:, 2:5);     % [cell, X, Y, Z]
 satellite_positions = sat_tbl(:, 2:4); % [X, Y, Z]
 slots_per_epoch = round(size(satellite_positions,1) / S);
 
 % Function to calculate expected delay alphauSi based on SSB periodicity thetakSi and power PkSi
-function [total_expected_delay, E_alpha] = calculate_alphauSi(Si, U, thetakSi, PkSi, ue_positions, satellite_positions, slots_per_epoch, cell_tbl)
+function total_expected_delay = calculate_alphauSi(Si, K, thetakSi, PkSi, pop_den, satellite_positions, slots_per_epoch, cell_tbl)
     % size of thetakSi: K * 1
     % size of PkSi: K * 1
     % Implement equations 3.7 to 3.11 here for delay calculation
     % This function returns expected delay for all cells and epochs given thetakSi and PkSi
-    P_th = 4 * 1e-13; 
+    P_th = 1e-14; 
     % fr1: 0.410GHz~7.125GHz; fr2: 24.25GHz~71GHz
     lambda = 0.1; % fc = 3GHz
-    Gmax = 40; phi3dB = 0.058; % [6]
+    % Gmax = 40; phi3dB = 0.058; % [6]
     m = 10.1; b = 0.126; Omega = 0.835; % average shadowing [5]
 
-    E_alpha = zeros(U, 1);
-    for u = 1:U
-        % Randomly assign this UE to a cell and beam (can use actual assignments if available)
-        k = ue_positions(u, 1);
+    E_alpha = zeros(K, 1);
+    failure_prob = zeros(K, 1);
+    dk = zeros(K, 1);
+    total_expected_delay = 0;
 
+    for k = 1:K
         % Average over slots in this epoch (pick center slot or average all slots)
         t0 = (Si - 1) * slots_per_epoch + 1;
         t1 = Si * slots_per_epoch;
         sat_pos = satellite_positions(round((t0+t1)/2),:); % Use center slot of epoch
 
-        ue_pos = ue_positions(u, 2:4);
         cell_center_pos = cell_tbl(k, 2:4);
-        dk = norm(ue_pos - sat_pos); %unit: meter
-        Lk = (lambda/(4*pi*dk))^2;
+        dk(k) = norm(cell_center_pos - sat_pos); %unit: meter
+        Lk = (lambda/(4*pi*dk(k)))^2;
 
         P = PkSi(k);
         theta = thetakSi(k);
 
-        % Antenna gain 
-        vec_ue = ue_pos - sat_pos;
-
-        % Vector from satellite to cell center
-        vec_cell = cell_center_pos - sat_pos;
-        
-        % Compute dot product and norms
-        dot_product = dot(vec_ue, vec_cell);
-        norm_ue = norm(vec_ue);
-        norm_cell = norm(vec_cell);
-        
-        % Calculate boresight angle in radians
-        phi_k_u = acos(dot_product / (norm_ue * norm_cell));
-        
-        mu = 2.07123 * sin(phi_k_u)/sin(phi3dB);
-        G_phi = Gmax * ((besselj(1,mu)/(2*mu) + 36*besselj(3,mu)/(mu^3))^2);
-
         % SSB reception failure probability (expectation, see eqs)
-        failure_prob = shadowed_rician_cdf(P_th / (P * Lk * G_phi), m, b, Omega);
+        failure_prob(k) = shadowed_rician_cdf(P_th / (P * Lk), m, b, Omega);
 
         % Expected initial waiting time
         E_beta = 0.5 * theta;
 
         % Expected number of failures
-        E_Q = failure_prob / (1 - failure_prob);
+        E_Q = failure_prob(k) / (1 - failure_prob(k));
 
         % Expected additional delay
         E_gamma = E_Q * theta;
 
         % Expected cell searching delay
-        E_alpha(u) = E_beta + E_gamma;
+        E_alpha(k) = E_beta + E_gamma;
+        total_expected_delay = total_expected_delay + E_alpha(k) * pop_den(k);
     end
-    total_expected_delay = sum(E_alpha);
 end
 
 function cdf_val = shadowed_rician_cdf(x, m, b, Omega)
@@ -145,9 +128,14 @@ function cdf_val = shadowed_rician_cdf(x, m, b, Omega)
 end
 
 % Genetic Algorithm: Fix power P, optimize SSB periodicity thetakSi
-function [best_thetakSi] = optimize_SSB_periodicity(Si, U, PkSi, ue_positions, satellite_positions, K, M, POP_SIZE, GA_GEN, slots_per_epoch, cell_tbl)
+function [best_thetakSi] = optimize_SSB_periodicity(Si, PkSi, pop_den, satellite_positions, K, M, POP_SIZE, GA_GEN, slots_per_epoch, cell_tbl)
     % Initialize population: each candidate is a (K x S) matrix of integer periodicities
-    population = randi([1, slots_per_epoch], K, POP_SIZE);
+    population = ones(K, POP_SIZE);
+    for i = 1:POP_SIZE
+        while sum
+        population(:, i) = randi([1, K / M * 10], K, 1);
+        
+    end
 
     for gen = 1:GA_GEN
         fitness = zeros(POP_SIZE,1);
@@ -159,7 +147,7 @@ function [best_thetakSi] = optimize_SSB_periodicity(Si, U, PkSi, ue_positions, s
                 continue;
             end
             % Compute expected delay
-            [totalalphaSi, ~] = calculate_alphauSi(Si, U, thetakSi, PkSi, ue_positions, satellite_positions, slots_per_epoch, cell_tbl);
+            totalalphaSi = calculate_alphauSi(Si, K, thetakSi, PkSi, pop_den, satellite_positions, slots_per_epoch, cell_tbl);
             fitness(i) = 1 / totalalphaSi; % Fitness = inverse of average delay
         end
         % Select parents via roulette wheel or tournament selection
@@ -173,7 +161,7 @@ function [best_thetakSi] = optimize_SSB_periodicity(Si, U, PkSi, ue_positions, s
         crossover_rate = 0.9; mutation_rate = 0.1;
         offspring = generate_offspring(population, parents_idx, K, crossover_rate, mutation_rate);
         % Calculate fitness for offspring and select next generation population
-        population = select_next_generation(population, offspring, fitness, Si, U, PkSi, ue_positions, satellite_positions, slots_per_epoch, cell_tbl);
+        population = select_next_generation(population, K, offspring, fitness, Si, PkSi, pop_den, satellite_positions, slots_per_epoch, cell_tbl);
     end
     % Return best individual
     [~, best_idx] = max(fitness);
@@ -237,7 +225,7 @@ function offspring = generate_offspring(population, parents_idx, K, crossover_ra
     end
 end
 
-function next_population = select_next_generation(population, offspring, fitness, Si, U, PkSi, ue_positions, satellite_positions, slots_per_epoch, cell_tbl)
+function next_population = select_next_generation(population, K, offspring, fitness, Si, PkSi, pop_den, satellite_positions, slots_per_epoch, cell_tbl)
     % 合併原始 population 及 offspring
     all_individuals = [population, offspring];
     % 需同時計算 offspring fitness，這裡假設 offspring_fitness 已經算好
@@ -246,7 +234,7 @@ function next_population = select_next_generation(population, offspring, fitness
     for i = 1:size(offspring,2)
         % 根據你的計算公式
         individual = offspring(:,i);
-        [totalalphaSi,~] = calculate_alphauSi(Si, U, individual, PkSi, ue_positions, satellite_positions, slots_per_epoch, cell_tbl); % 必需補齊你的輸入
+        totalalphaSi = calculate_alphauSi(Si, K, individual, PkSi, pop_den, satellite_positions, slots_per_epoch, cell_tbl); 
         all_fitness(size(population,2)+i) = 1 / totalalphaSi;
     end
     % 根據適應度排序（由大到小）
@@ -256,11 +244,10 @@ function next_population = select_next_generation(population, offspring, fitness
 end
 
 % Simulated Annealing: Fix SSB periodicity thetakSi, optimize power allocation PkSi
-function [best_P] = optimize_power_allocation(Si, U, thetakSi, ue_positions, satellite_positions, slots_per_epoch, K, P_total, T_max, T_min, cooling_rate, cell_tbl)
+function [best_P] = optimize_power_allocation(Si, thetakSi, pop_den, satellite_positions, slots_per_epoch, K, P_total, T_max, T_min, cooling_rate, cell_tbl)
     % Initialize power allocation Pcurrent with feasible solution
     Pcurrent = ones(K, 1) * (P_total / K); % Equal power initial guess
-    [totalalphaSi, ~] = calculate_alphauSi(Si, U, thetakSi, Pcurrent, ue_positions, satellite_positions, slots_per_epoch, cell_tbl);
-    current_delay = totalalphaSi / U;
+    current_delay = calculate_alphauSi(Si, K, thetakSi, Pcurrent, pop_den, satellite_positions, slots_per_epoch, cell_tbl);
 
     T = T_max;
     best_P = Pcurrent;
@@ -269,8 +256,7 @@ function [best_P] = optimize_power_allocation(Si, U, thetakSi, ue_positions, sat
     while T > T_min
         % Perturb power allocation to get new candidate, keep sum power <= P_total
         Pnew = perturb_power_allocation(Pcurrent, P_total);
-        [totalalphaSi, ~] = calculate_alphauSi(Si, U, thetakSi, Pnew, ue_positions, satellite_positions, slots_per_epoch, cell_tbl);
-        new_delay = totalalphaSi / U;
+        new_delay = calculate_alphauSi(Si, K, thetakSi, Pnew, pop_den, satellite_positions, slots_per_epoch, cell_tbl);
 
         if new_delay < current_delay
             Pcurrent = Pnew;
@@ -331,13 +317,21 @@ threshold = 1e-3;
 prev_delay = inf;
 Si = 1;
 PkSi = ones(K, 1) * (P_total / K);
+thetakSi = ones(K, 1) * (K / M);
+
+% [cur_delay, E_alpha, failure_prob, dk] = calculate_alphauSi(Si, K, thetakSi, PkSi, pop_den, satellite_positions, slots_per_epoch, cell_tbl);
+% avg_delay = cur_delay / U
+% E_alpha
+% failure_prob
+% dk
+% avg_delay is 10.0991 if we average the power and SSB periodicity
 for iter = 1:max_iterations
     % 1. Fix power P, optimize SSB periodicity thetakSi with GA
-    thetakSi = optimize_SSB_periodicity(Si, U, PkSi, ue_positions, satellite_positions, K, M, POP_SIZE, GA_GEN, slots_per_epoch, cell_tbl)
+    thetakSi = optimize_SSB_periodicity(Si, PkSi, pop_den, satellite_positions, K, M, POP_SIZE, GA_GEN, slots_per_epoch, cell_tbl);
     % 2. Fix periodicity thetakSi, optimize power allocation P with SA
-    PkSi = optimize_power_allocation(Si, U, thetakSi, ue_positions, satellite_positions, slots_per_epoch, K, P_total, T_max, T_min, cooling_rate, cell_tbl)
+    PkSi = optimize_power_allocation(Si, thetakSi, pop_den, satellite_positions, slots_per_epoch, K, P_total, T_max, T_min, cooling_rate, cell_tbl);
     % Calculate current delay
-    [cur_delay, E_alpha] = calculate_alphauSi(Si, U, thetakSi, PkSi, ue_positions, satellite_positions, slots_per_epoch, cell_tbl);
+    cur_delay = calculate_alphauSi(Si, K, thetakSi, PkSi, pop_den, satellite_positions, slots_per_epoch, cell_tbl);
     fprintf('Iteration %d, Avg Delay: %f\n', iter, cur_delay / U);
     % Check convergence
     if abs(prev_delay - cur_delay) < threshold

@@ -20,10 +20,9 @@ earthRadius = 6371;
 % Generate ground station positions
 
 % Define hexagonal cells
-
-pop = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]; % 每個 cell 的 population (要與 cell 數 K 一致)
-U = sum(pop);
-K = length(pop); % Number of hex cells
+pop_den = readmatrix('population_density.txt'); % 每個 cell 的 population (要與 cell 數 K 一致)
+U = sum(pop_den);
+K = length(pop_den); % Number of hex cells
 cell_radius = 50; % km, radius of hex cell
 
 % Compute hex grid centers (2D lat, lon offset)
@@ -61,16 +60,16 @@ end
 
 U_i = zeros(U, 1);
 z = 1;
-for i = 1:length(pop)
-    for j = 1:pop(i)
+for i = 1:length(pop_den)
+    for j = 1:pop_den(i)
         U_i(z) = i;
         z = z + 1;
     end
 end
-
+%{
 groundStationPositions = [];
 for k = 1:K
-    numStationsCell = pop(k); % 第 k 個 cell 需要的ground station數量
+    numStationsCell = pop_den(k); % 第 k 個 cell 需要的ground station數量
     for n = 1:numStationsCell
         angle = rand * 2*pi;
         radius = sqrt(rand) * cell_radius;
@@ -90,6 +89,24 @@ for k = 1:K
         % 同時加入 scenario
         groundStation(sc, gsLat, gsLon);
     end
+end
+%}
+groundStationPositions = [];
+for k = 1:K
+    angle = 0 * 2*pi;
+    radius = sqrt(0) * cell_radius;
+
+    deltaLat = (radius * cos(angle) / 6371) * (180/pi);
+    deltaLon = (radius * sin(angle) / (6371 * cosd(cell_centers(k,1)))) * (180/pi);
+
+    gsLat = cell_centers(k,1) + deltaLat;
+    gsLon = cell_centers(k,2) + deltaLon;
+    gsAlt = 0;
+
+    groundStationPositions = [groundStationPositions; gsLat, gsLon, gsAlt];
+
+    % 同時加入 scenario
+    groundStation(sc, gsLat, gsLon);
 end
 
 groundStationPositions_ecef = lla2ecef(groundStationPositions);
