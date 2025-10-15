@@ -21,7 +21,9 @@ earthRadius = 6371;
 
 % Define hexagonal cells
 
-K = 8; % Number of hex cells
+pop = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]; % 每個 cell 的 population (要與 cell 數 K 一致)
+U = sum(pop);
+K = length(pop); % Number of hex cells
 cell_radius = 50; % km, radius of hex cell
 
 % Compute hex grid centers (2D lat, lon offset)
@@ -57,8 +59,6 @@ for r = 0:rows-1
     end
 end
 
-pop = [1,2,3,4,5,6,7,8]; % 每個 cell 的 population (要與 cell 數 K 一致)
-U = sum(pop);
 U_i = zeros(U, 1);
 z = 1;
 for i = 1:length(pop)
@@ -74,6 +74,9 @@ for k = 1:K
     for n = 1:numStationsCell
         angle = rand * 2*pi;
         radius = sqrt(rand) * cell_radius;
+
+        % angle = 0 * 2*pi;
+        % radius = sqrt(0) * cell_radius;
 
         deltaLat = (radius * cos(angle) / 6371) * (180/pi);
         deltaLon = (radius * sin(angle) / (6371 * cosd(cell_centers(k,1)))) * (180/pi);

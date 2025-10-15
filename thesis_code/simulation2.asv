@@ -1,3 +1,5 @@
+% TODO: increase K
+% TODO: define received antenna gain
 % Parameters (to define as per your problem instance)
 K = 8; % Number of cells
 S = 5; % Number of epochs
@@ -73,7 +75,6 @@ function [total_expected_delay, E_alpha] = calculate_alphauSi(Si, U, thetakSi, P
         G_phi = Gmax * ((besselj(1,mu)/(2*mu) + 36*besselj(3,mu)/(mu^3))^2);
 
         % SSB reception failure probability (expectation, see eqs)
-        P_th / (P * Lk * G_phi);
         failure_prob = shadowed_rician_cdf(P_th / (P * Lk * G_phi), m, b, Omega);
 
         % Expected initial waiting time
@@ -336,8 +337,8 @@ for iter = 1:max_iterations
     % 2. Fix periodicity thetakSi, optimize power allocation P with SA
     PkSi = optimize_power_allocation(Si, U, thetakSi, ue_positions, satellite_positions, slots_per_epoch, K, P_total, T_max, T_min, cooling_rate, cell_tbl)
     % Calculate current delay
-    cur_delay = mean(calculate_alphauSi(Si, U, thetakSi, PkSi, ue_positions, satellite_positions, slots_per_epoch, cell_tbl), 'all');
-    fprintf('Iteration %d, Avg Delay: %f\n', iter, cur_delay);
+    [cur_delay, E_alpha] = calculate_alphauSi(Si, U, thetakSi, PkSi, ue_positions, satellite_positions, slots_per_epoch, cell_tbl);
+    fprintf('Iteration %d, Avg Delay: %f\n', iter, cur_delay / U);
     % Check convergence
     if abs(prev_delay - cur_delay) < threshold
         break;

@@ -1,5 +1,8 @@
+% TODO: increase K
+% TODO: define Tx/Rx antenna gain
+% TODO: figure out why no convergence
 % Parameters (to define as per your problem instance)
-K = 8; % Number of cells
+
 S = 5; % Number of epochs
 POP_SIZE = 100; 
 MAX_GEN = 100;
@@ -16,6 +19,8 @@ P = repmat(P_total/K, K, S);
 ue_tbl = readmatrix('ue_positions_3d.csv'); % [UE_ID, Cell_ID, X_m, Y_m, Z_m]
 sat_tbl = readmatrix('satellite_positions_3d.csv'); % [Time_Slot, X_m, Y_m, Z_m]
 cell_tbl = readmatrix('cell_center_positions_3d.csv'); % [Index, X(m), Y(m), Z(m)]
+
+K = ue_tbl(end, 2); % Number of cells
 
 % Example input: user distribution and other system parameters
 U = size(ue_tbl, 1);               % Number of UEs
@@ -38,6 +43,7 @@ function [total_expected_delay, E_alpha] = calculate_alphauSi(Si, U, thetakSi, P
     m = 10.1; b = 0.126; Omega = 0.835; % average shadowing [5]
 
     E_alpha = zeros(U, 1);
+    failure_prob = zeros(U, 1);
     for u = 1:U
         % Randomly assign this UE to a cell and beam (can use actual assignments if available)
         k = ue_positions(u, 1);
@@ -73,13 +79,13 @@ function [total_expected_delay, E_alpha] = calculate_alphauSi(Si, U, thetakSi, P
         G_phi = Gmax * ((besselj(1,mu)/(2*mu) + 36*besselj(3,mu)/(mu^3))^2);
 
         % SSB reception failure probability (expectation, see eqs)
-        failure_prob = shadowed_rician_cdf(P_th / (P * Lk * G_phi), m, b, Omega);
+        failure_prob(u) = shadowed_rician_cdf(P_th / (P * Lk * G_phi), m, b, Omega);
 
         % Expected initial waiting time
         E_beta = 0.5 * theta;
 
         % Expected number of failures
-        E_Q = failure_prob / (1 - failure_prob);
+        E_Q = failure_prob(u) / (1 - failure_prob(u));
 
         % Expected additional delay
         E_gamma = E_Q * theta;
@@ -145,7 +151,7 @@ end
 % Genetic Algorithm: Fix power P, optimize SSB periodicity thetakSi
 function [best_thetakSi] = optimize_SSB_periodicity(Si, U, PkSi, ue_positions, satellite_positions, K, M, POP_SIZE, GA_GEN, slots_per_epoch, cell_tbl)
     % Initialize population: each candidate is a (K x S) matrix of integer periodicities
-    population = randi([1, slots_per_epoch], K, POP_SIZE);
+    population = randi([1, K / M * 2], K, POP_SIZE);
 
     for gen = 1:GA_GEN
         fitness = zeros(POP_SIZE,1);
@@ -331,9 +337,9 @@ Si = 1;
 PkSi = ones(K, 1) * (P_total / K);
 for iter = 1:max_iterations
     % 1. Fix power P, optimize SSB periodicity thetakSi with GA
-    thetakSi = optimize_SSB_periodicity(Si, U, PkSi, ue_positions, satellite_positions, K, M, POP_SIZE, GA_GEN, slots_per_epoch, cell_tbl);
+    thetakSi = optimize_SSB_periodicity(Si, U, PkSi, ue_positions, satellite_positions, K, M, POP_SIZE, GA_GEN, slots_per_epoch, cell_tbl)
     % 2. Fix periodicity thetakSi, optimize power allocation P with SA
-    PkSi = optimize_power_allocation(Si, U, thetakSi, ue_positions, satellite_positions, slots_per_epoch, K, P_total, T_max, T_min, cooling_rate, cell_tbl);
+    PkSi = optimize_power_allocation(Si, U, thetakSi, ue_positions, satellite_positions, slots_per_epoch, K, P_total, T_max, T_min, cooling_rate, cell_tbl)
     % Calculate current delay
     [cur_delay, E_alpha] = calculate_alphauSi(Si, U, thetakSi, PkSi, ue_positions, satellite_positions, slots_per_epoch, cell_tbl);
     fprintf('Iteration %d, Avg Delay: %f\n', iter, cur_delay / U);
