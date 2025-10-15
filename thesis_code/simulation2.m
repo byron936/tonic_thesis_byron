@@ -128,10 +128,11 @@ function cdf_val = shadowed_rician_cdf(x, m, b, Omega)
 end
 
 % Genetic Algorithm: Fix power P, optimize SSB periodicity thetakSi
-function [best_thetakSi] = optimize_SSB_periodicity(Si, PkSi, pop_den, satellite_positions, K, M, POP_SIZE, GA_GEN, slots_per_epoch, cell_tbl)
+function [best_thetakSi] = optimize_SSB_periodicity(Si, PkSi, pre_thetakSi, pop_den, satellite_positions, K, M, POP_SIZE, GA_GEN, slots_per_epoch, cell_tbl)
     % Initialize population: each candidate is a (K x S) matrix of integer periodicities
     population = ones(K, POP_SIZE);
-    for i = 1:POP_SIZE
+    population(:, 1) = pre_thetakSi;
+    for i = 2:POP_SIZE
         while sum(1./population(:, i)) < M - 1 || sum(1./population(:, i)) > M
             population(:, i) = randi([1, K / M * 10], K, 1);
         end
@@ -244,9 +245,9 @@ function next_population = select_next_generation(population, K, offspring, fitn
 end
 
 % Simulated Annealing: Fix SSB periodicity thetakSi, optimize power allocation PkSi
-function [best_P] = optimize_power_allocation(Si, thetakSi, pop_den, satellite_positions, slots_per_epoch, K, P_total, T_max, T_min, cooling_rate, cell_tbl)
+function [best_P] = optimize_power_allocation(Si, thetakSi, pre_PkSi, pop_den, satellite_positions, slots_per_epoch, K, P_total, T_max, T_min, cooling_rate, cell_tbl)
     % Initialize power allocation Pcurrent with feasible solution
-    Pcurrent = ones(K, 1) * (P_total / K); % Equal power initial guess
+    Pcurrent = pre_PkSi; % Equal power initial guess
     current_delay = calculate_alphauSi(Si, K, thetakSi, Pcurrent, pop_den, satellite_positions, slots_per_epoch, cell_tbl);
 
     T = T_max;
@@ -312,12 +313,20 @@ function P_new = perturb_power_allocation(P_current, P_total)
 end
 %%%%%
 % Main alternating optimization loop
-max_iterations = 200;
-threshold = 1e-3;
-prev_delay = inf;
+max_iterations = 100;
+
 Si = 1;
 PkSi = ones(K, 1) * (P_total / K);
 thetakSi = ones(K, 1) * (K / M);
+
+best_delay = 10000;
+best_thetakSi = ones(K, 1) * (K / M);
+best_PkSi = ones(K, 1) * (P_total / K);
+best_iter = 0;
+
+delay_record = zeros(1, max_iterations);
+thetakSi_record = zeros(K, max_iterations);
+Pksi_record = zeros(K, max_iterations);
 
 % [cur_delay, E_alpha, failure_prob, dk] = calculate_alphauSi(Si, K, thetakSi, PkSi, pop_den, satellite_positions, slots_per_epoch, cell_tbl);
 % avg_delay = cur_delay / U
@@ -327,18 +336,35 @@ thetakSi = ones(K, 1) * (K / M);
 % avg_delay is 10.0991 if we average the power and SSB periodicity
 for iter = 1:max_iterations
     % 1. Fix power P, optimize SSB periodicity thetakSi with GA
-    thetakSi = optimize_SSB_periodicity(Si, PkSi, pop_den, satellite_positions, K, M, POP_SIZE, GA_GEN, slots_per_epoch, cell_tbl);
+    thetakSi = optimize_SSB_periodicity(Si, PkSi, best_thetakSi, pop_den, satellite_positions, K, M, POP_SIZE, GA_GEN, slots_per_epoch, cell_tbl);
     % 2. Fix periodicity thetakSi, optimize power allocation P with SA
-    PkSi = optimize_power_allocation(Si, thetakSi, pop_den, satellite_positions, slots_per_epoch, K, P_total, T_max, T_min, cooling_rate, cell_tbl);
+    PkSi = optimize_power_allocation(Si, thetakSi, best_PkSi, pop_den, satellite_positions, slots_per_epoch, K, P_total, T_max, T_min, cooling_rate, cell_tbl);
     % Calculate current delay
     cur_delay = calculate_alphauSi(Si, K, thetakSi, PkSi, pop_den, satellite_positions, slots_per_epoch, cell_tbl);
-    fprintf('Iteration %d, Avg Delay: %f\n', iter, cur_delay / U);
+    avg_delay = cur_delay / U;
+    fprintf('Iteration %d, Avg Delay: %f\n', iter, avg_delay);
+    delay_record(:, iter) = avg_delay;
+    thetakSi_record(:, iter) = thetakSi;
+    Pksi_record(:, iter) = PkSi;
     % Check convergence
-    if abs(prev_delay - cur_delay) < threshold
-        break;
+    if best_delay > avg_delay
+        best_delay = avg_delay;
+        best_thetakSi = thetakSi;
+        best_PkSi = PkSi;
+        best_iter = iter;
     end
-    prev_delay = cur_delay;
 end
 
+plot(delay_record);
+xlabel('Iter');
+ylabel('Delay');
+title('Total Delay through Iterations');
+
+delay_record = round(delay_record, 4);
+Pksi_record = round(Pksi_record);
+
+writematrix(delay_record, 'delay.csv');
+writematrix(thetakSi_record, 'Periodicity.csv');
+writematrix(Pksi_record, 'Power.csv');
 % final optimal thetakSi and P obtained from above loop
 
