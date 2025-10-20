@@ -66,7 +66,8 @@ for i = 1:length(pop_den)
         z = z + 1;
     end
 end
-%{
+% UE position
+
 groundStationPositions = [];
 for k = 1:K
     numStationsCell = pop_den(k); % 第 k 個 cell 需要的ground station數量
@@ -90,7 +91,9 @@ for k = 1:K
         groundStation(sc, gsLat, gsLon);
     end
 end
-%}
+
+% ground station position
+%{
 groundStationPositions = [];
 for k = 1:K
     angle = 0 * 2*pi;
@@ -108,7 +111,7 @@ for k = 1:K
     % 同時加入 scenario
     groundStation(sc, gsLat, gsLon);
 end
-
+%}
 groundStationPositions_ecef = lla2ecef(groundStationPositions);
 
 % Display the ground station positions (optional)
