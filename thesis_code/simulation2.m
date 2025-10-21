@@ -13,9 +13,6 @@ cooling_rate = 0.95;
 M = 4; % Number of beams
 P_total = 1000; % Total power budget
 
-% Example input: fixed initial power allocation P (K x S matrix)
-P = repmat(P_total/K, K, S); 
-
 pop_den = readmatrix('population_density.txt');
 sat_tbl = readmatrix('satellite_positions_3d.csv'); % [Time_Slot, X_m, Y_m, Z_m]
 cell_tbl = readmatrix('cell_center_positions_3d.csv'); % [Index, X(m), Y(m), Z(m)]
