@@ -189,7 +189,7 @@ This section formulates the optimization problem based on recent 3GPP standardiz
 \begin{align}
     &\min_{P,\,\theta} \sum_{u} \sum_{\mathcal{S}_i\in \mathcal{\widetilde{S}}} \mathbb{E}[\alpha_u[\mathcal{S}_i]] \\ 
     &\text{subject to} \nonumber \\
-    &\sum_{m} \frac{P_{k}[\mathcal{S}_i]}{\theta_k[\mathcal{S}_i]} \leq P^{total}, \quad \forall \mathcal{S}_i \in \mathcal{\widetilde{S}} \label{eq:power_constraint} \\ 
+    &\sum_{k} \frac{P_{k}[\mathcal{S}_i]}{\theta_k[\mathcal{S}_i]} \leq P^{total}, \quad \forall \mathcal{S}_i \in \mathcal{\widetilde{S}} \label{eq:power_constraint} \\ 
     &P_k[\mathcal{S}_i]\geq 0, \quad \forall k\in\mathcal{K}, \mathcal{S}_i\in\mathcal{\widetilde{S}} \label{eq:power_nonnegative} \\
     &\theta_k[\mathcal{S}_i] \leq N, \quad \forall k\in\mathcal{K}, \mathcal{S}_i\in\mathcal{\widetilde{S}} \label{eq:theta_upper} \\
     &\theta_k[\mathcal{S}_i] \in \mathbb{N}^+, \quad \forall k\in\mathcal{K}, \mathcal{S}_i\in\mathcal{\widetilde{S}} \label{eq:theta_positive} \\

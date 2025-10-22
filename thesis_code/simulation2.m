@@ -11,7 +11,7 @@ T_max = 100; % Initial temperature for SA
 T_min = 1; % Minimum temperature for SA
 cooling_rate = 0.95;
 M = 4; % Number of beams
-P_total = 1000; % Total power budget
+P_total = 100; % Total power budget
 
 pop_den = readmatrix('population_density.txt');
 sat_tbl = readmatrix('satellite_positions_3d.csv'); % [Time_Slot, X_m, Y_m, Z_m]
@@ -156,7 +156,7 @@ function [best_thetakSi] = optimize_SSB_periodicity(Si, PkSi, pre_thetakSi, pop_
         end
         parents_idx = select_parents(fitness, num_parents); 
         % Crossover & mutation to generate offspring applying constraints
-        crossover_rate = 0.9; mutation_rate = 0.3;
+        crossover_rate = 0.9; mutation_rate = 0.1;
         offspring = generate_offspring(population, parents_idx, K, crossover_rate, mutation_rate);
         % Calculate fitness for offspring and select next generation population
         population = select_next_generation(population, K, offspring, fitness, Si, PkSi, pop_den, satellite_positions, slots_per_epoch, cell_tbl);
@@ -253,7 +253,7 @@ function [best_P] = optimize_power_allocation(Si, thetakSi, pre_PkSi, pop_den, s
 
     while T > T_min
         % Perturb power allocation to get new candidate, keep sum power <= P_total
-        Pnew = perturb_power_allocation(Pcurrent, P_total);
+        Pnew = perturb_power_allocation(Pcurrent, P_total, K, thetakSi);
         new_delay = calculate_alphauSi(Si, K, thetakSi, Pnew, pop_den, satellite_positions, slots_per_epoch, cell_tbl);
 
         if new_delay < current_delay
@@ -274,13 +274,12 @@ function [best_P] = optimize_power_allocation(Si, thetakSi, pre_PkSi, pop_den, s
     end
 end
 
-function P_new = perturb_power_allocation(P_current, P_total)
+function P_new = perturb_power_allocation(P_current, P_total, K, thetakSi)
     % Perturb power allocation vector P_current keeping sum <= P_total
     % Inputs:
     %   P_current: current power allocation (K x 1)
     %   P_total: total power budget (scalar)
     
-    K = length(P_current);
     P_new = P_current;
     
     % Select two random indices to transfer power between
@@ -291,22 +290,24 @@ function P_new = perturb_power_allocation(P_current, P_total)
     end
     
     % Choose a small perturbation value delta
-    perturbation_rate = 0.2;
-    delta = perturbation_rate * P_total * (2*rand - 1); % random between -0.1*P_total to +0.1*P_total
+    perturbation_rate = 0.1;
+    delta = perturbation_rate * P_total * (2*rand - 1); % random between -pert_rate*P_total to +pert_rate*P_total
     
     % Attempt to transfer delta power from idx1 to idx2
-    if (P_new(idx1) - delta >= 0) && (P_new(idx2) + delta >= 0)
-        P_new(idx1) = P_new(idx1) - delta;
-        P_new(idx2) = P_new(idx2) + delta;
+    if (P_new(idx1) - delta * thetakSi(idx1) >= 0) && (P_new(idx2) + delta * thetakSi(idx2) >= 0)
+        P_new(idx1) = P_new(idx1) - delta * thetakSi(idx1);
+        P_new(idx2) = P_new(idx2) + delta * thetakSi(idx2);
     else
         % If invalid, do not change powers (or could try smaller delta)
         % Here no change
     end
     
     % Ensure sum stays approximately P_total by normalization (if needed)
-    total_power = sum(P_new);
+    P_ = P_new ./ thetakSi;
+    total_power = sum(P_);
     if abs(total_power - P_total) > 1e-6
-        P_new = P_new * (P_total / total_power);
+        P_ = P_ * (P_total / total_power);
+        P_new = P_ .* thetakSi;
     end
 end
 %%%%%
@@ -314,12 +315,12 @@ end
 max_iterations = 100;
 
 Si = 1;
-PkSi = ones(K, 1) * (P_total / K);
+PkSi = ones(K, 1) * (P_total / M);
 thetakSi = ones(K, 1) * (K / M);
 
 best_delay = 10000;
-best_thetakSi = ones(K, 1) * (K / M);
 best_PkSi = ones(K, 1) * (P_total / K);
+best_thetakSi = ones(K, 1) * (K / M);
 best_iter = 0;
 
 delay_record = zeros(1, max_iterations);

@@ -105,12 +105,29 @@ end
 m1 = 10.1; b1 = 0.126; Omega1 = 0.835; % average
 m2 = 0.739; b2 = 0.063; Omega2 = 8.97e-4; % frequent
 m3 = 19.4; b3 = 0.158; Omega3 = 1.29; % infrequent
+
 x = linspace(0, 10, 1000);
-y1 = shadowed_rician_cdf_derivative(x, m1, b1, Omega1);
-y2 = shadowed_rician_cdf_derivative(x, m2, b2, Omega2);
-y3 = shadowed_rician_cdf_derivative(x, m3, b3, Omega3);
+
+y1 = shadowed_rician_cdf(x, m1, b1, Omega1);
+y2 = shadowed_rician_cdf(x, m2, b2, Omega2);
+y3 = shadowed_rician_cdf(x, m3, b3, Omega3);
+
+y_1 = shadowed_rician_cdf_derivative(x, m1, b1, Omega1);
+y_2 = shadowed_rician_cdf_derivative(x, m2, b2, Omega2);
+y_3 = shadowed_rician_cdf_derivative(x, m3, b3, Omega3);
+
+figure;
 hold on
-plot(x, shadowed_rician_cdf_derivative(x, m1, b1, Omega1));
-plot(x, shadowed_rician_cdf_derivative(x, m2, b2, Omega2));
-plot(x, shadowed_rician_cdf_derivative(x, m3, b3, Omega3));
+plot(x, y1);
+plot(x, y2);
+plot(x, y3);
 legend('average', 'frequent', 'infrequent');
+hold off
+
+figure;
+hold on
+plot(x, y_1);
+plot(x, y_2);
+plot(x, y_3);
+legend('average', 'frequent', 'infrequent');
+hold off
