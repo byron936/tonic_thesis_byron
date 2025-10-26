@@ -11,7 +11,7 @@ T_max = 100; % Initial temperature for SA
 T_min = 1; % Minimum temperature for SA
 cooling_rate = 0.95;
 M = 4; % Number of beams
-P_total = 100; % Total power budget
+P_total = 120; % Total power budget
 
 pop_den = readmatrix('population_density.txt');
 sat_tbl = readmatrix('satellite_positions_3d.csv'); % [Time_Slot, X_m, Y_m, Z_m]
@@ -30,7 +30,7 @@ function total_expected_delay = calculate_alphauSi(Si, K, thetakSi, PkSi, pop_de
     % size of PkSi: K * 1
     % Implement equations 3.7 to 3.11 here for delay calculation
     % This function returns expected delay for all cells and epochs given thetakSi and PkSi
-    P_th = 1e-14; 
+    P_th = 1e-14 / 2; 
     % fr1: 0.410GHz~7.125GHz; fr2: 24.25GHz~71GHz
     lambda = 0.1; % fc = 3GHz
     % Gmax = 40; phi3dB = 0.058; % [6]
