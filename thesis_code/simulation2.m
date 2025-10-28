@@ -1,8 +1,3 @@
-% TODO: increase K
-% TODO: define Tx/Rx antenna gain
-% TODO: figure out why no convergence
-% Parameters (to define as per your problem instance)
-
 S = 5; % Number of epochs
 POP_SIZE = 100; 
 MAX_GEN = 100;
@@ -30,7 +25,7 @@ function total_expected_delay = calculate_alphauSi(Si, K, thetakSi, PkSi, pop_de
     % size of PkSi: K * 1
     % Implement equations 3.7 to 3.11 here for delay calculation
     % This function returns expected delay for all cells and epochs given thetakSi and PkSi
-    P_th = 1e-14 / 2; 
+    P_th = 1e-14 / 2.2; 
     % fr1: 0.410GHz~7.125GHz; fr2: 24.25GHz~71GHz
     lambda = 0.1; % fc = 3GHz
     % Gmax = 40; phi3dB = 0.058; % [6]
@@ -55,6 +50,7 @@ function total_expected_delay = calculate_alphauSi(Si, K, thetakSi, PkSi, pop_de
         theta = thetakSi(k);
 
         % SSB reception failure probability (expectation, see eqs)
+        % P_th / (P * Lk)
         failure_prob(k) = shadowed_rician_cdf(P_th / (P * Lk), m, b, Omega);
 
         % Expected initial waiting time
@@ -327,9 +323,90 @@ delay_record = zeros(1, max_iterations);
 thetakSi_record = zeros(K, max_iterations);
 Pksi_record = zeros(K, max_iterations);
 
-% cur_delay = calculate_alphauSi(Si, K, thetakSi, PkSi, pop_den, satellite_positions, slots_per_epoch, cell_tbl);
-% avg_delay = cur_delay / U
+PkSi = [27.412823157863709
+28.928616534013621
+32.331175068912671
+35.978911782289543
+41.401545748618709
+48.463668828544300
+55.108621223606029
+28.518734359021405
+31.069309797806486
+34.507566708989820
+38.834112250043098
+44.033354849719935
+51.767486027374780
+60.724394825646051
+28.809284005295492
+30.387779156836906
+34.389926911395570
+37.834894743606554
+42.134602241412033
+49.299051330778155
+57.667039209714254
+33.415359492049397
+35.340651820445537
+38.139353196577765
+43.913805694481475
+48.556210489283863
+56.524792699789337
+65.728723180453002
+37.435299877974963
+38.837040539217227
+41.107779891571305
+46.698401590797388
+50.817115595124690
+55.752032134976780
+64.549554032809695
+45.107678790416116
+46.940288265903199
+49.635627915111854
+53.173982478194525
+60.698337872749590];
+thetakSi = ceil([48
+35
+31
+28
+27
+27
+26
+18
+18
+18
+18
+18
+19
+20
+13
+13
+14
+14
+14
+15
+16
+12
+12
+12
+13
+13
+14
+15
+11
+11
+11
+12
+12
+12
+13
+11
+11
+11
+11
+12]);
 
+cur_delay = calculate_alphauSi(Si, K, thetakSi, PkSi, pop_den, satellite_positions, slots_per_epoch, cell_tbl);
+avg_delay = cur_delay / U
+%{
 for iter = 1:max_iterations
     % 1. Fix power P, optimize SSB periodicity thetakSi with GA
     thetakSi = optimize_SSB_periodicity(Si, PkSi, best_thetakSi, pop_den, satellite_positions, K, M, POP_SIZE, GA_GEN, slots_per_epoch, cell_tbl);
@@ -363,4 +440,4 @@ writematrix(delay_record, 'Delay3.csv');
 writematrix(thetakSi_record, 'Periodicity3.csv');
 writematrix(Pksi_record, 'Power3.csv');
 % final optimal thetakSi and P obtained from above loop
-
+%}

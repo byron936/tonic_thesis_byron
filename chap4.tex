@@ -1,8 +1,11 @@
 \chapter{Proposed Algorithm}
 \label{chap:algorithm}
+
+\section{Recap: Alternating Optimization with Genetic Algorithm and Simulated Annealing (GASA)}
+
 Alternating optimization is a widely used strategy for non-convex problems that involve multiple variables or mixed types of parameters. The core idea is to decompose the original challenging joint optimization into two or more easier subproblems, which are solved iteratively. In our problem, we first fix the power allocation $P$ and optimize the SSB periodicity $\theta$. Then, we fix the SSB periodicity $\theta$ and optimize the power allocation $P$. This process repeats until convergence. Thus, the problem (\ref{eq:main}) can be devided to two subproblems. 
 
-\section{Fix Power Optimize SSB Periodicity}
+\subsection{Fix Power Optimize SSB Periodicity}
 
 \begin{subequations} \label{eq:FPOS}
 \begin{align}
@@ -48,9 +51,9 @@ We use Genetic Algorithm to solve this problem:
     \end{algorithmic}
 \end{algorithm}
 
-\section{Fix SSB Periodicity Optimize Power}
+\subsection{Fix SSB Periodicity Optimize Power}
 
-\begin{subequations} \label{eq:main}
+\begin{subequations}
 \begin{align}
     &\min_{P} \sum_{u} \sum_{\mathcal{S}_i\in \mathcal{\widetilde{S}}} \mathbb{E}[\alpha_u[\mathcal{S}_i]] \\
     &\sum_{m} \frac{P_{k}[\mathcal{S}_i]}{\theta_k[\mathcal{S}_i]} \leq P^{total}, \quad \forall \mathcal{S}_i \in \mathcal{\widetilde{S}}  \\ 
@@ -94,60 +97,123 @@ We use Simulated Annealing to solve this problem:
     \end{algorithmic}
 \end{algorithm}
 
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\textwidth]{figure/GASA.pdf}
+    \caption{GASA diagram flow}
+    \label{GASA diagram flow}
+\end{figure}
 
-% \begin{algorithm}[H]
-% \caption{Resource Re-balancing Algorithm}
-% \label{alg:rebalancing_algorithm}
-% \begin{algorithmic}[1]
-% \REQUIRE{}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\textwidth]{figure/Taylor.pdf}
+    \caption{Taylor series expansion diagram flow}
+    \label{Taylor diagram flow}
+\end{figure}
 
-% Total available resources $M_{total}$ (a positive integer representing the total resources),
+\section{Taylor Expansion on Objective Function}
 
-% Set of groups $\{G_l \mid l = 1, 2, \dots, |\textbf{G}|\}$ (where $|\textbf{G}|$ is the total number of groups),
+In this method, we use Taylor expansion on $F_{h_k}$ to approximate the non-linear term into linear term. Below are the calculations:
+\begin{equation}
+    F(x) = K \sum_{n=0}^\infty \frac{(m)_n d^n (2b)^{tn}}{(n!)^2} \zeta(1+n, \frac{x}{2b})
+\end{equation}
+\begin{equation}
+    F'(x) = K \sum_{n=0}^\infty \frac{(m)_n d^n (2b)^{tn}}{(n!)^2} \left( \frac{x}{2b} \right)^n e^{\frac{x}{2b}} \cdot \frac{1}{2b}
+\end{equation}
+Given a real number $a$, the first order Taylor series of a real function $f(x)$ can be expressed as:
+\begin{equation}
+    \begin{aligned}
+        f(x) &\approx f(a) + f'(a)\cdot(x-a)
+    \end{aligned}
+\end{equation}
+Then the expectation of the number of SSB reception failures $Q_u[S_i]$ can be expressed as follows:
+\begin{equation}
+    \begin{aligned}
+        &\mathbb{E}[Q_u[S_i]] = \frac{F\left( \frac{P_k^{\text{th}}}{P_k \cdot L_k} \right)}{1 - F\left( \frac{P_k^{\text{th}}}{P_k \cdot L_k} \right)} \\
+        &\approx \frac{F(a) + F'(a) \cdot \left( \frac{P_k^{\text{th}}}{P_k \cdot L_k} - a \right)}{1 - \left[ F(a) + F'(a) \cdot \left( \frac{P_k^{\text{th}}}{P_k \cdot L_k} - a \right) \right]}
+    \end{aligned}
+\end{equation}
+where $k$ is the cell that the $u$-th user connected to. The expectation of user cell searching delay can be expressed as follows:
+\begin{equation}
+    E[\alpha_u] = E[\beta_u] + E[\gamma_u]
+    =\left( \frac{1}{2} + \frac{P_k C + E_k}{P_k (1-C) - E_k} \right) \theta_k
+\end{equation}
+where $C = F(a) - F'(a)\cdot a$, $E_k = \frac{F'(a) P^{th}}{L_k}$. We introduce the population density of the $k$-th cell as $D_k$. Then the cell searching delay for all UE can expressed as follows:
+\begin{equation}
+    \sum_u E[\alpha_u] = \sum_k D_k \left( \frac{1}{2} + \frac{P_k C + E_k}{P_k (1-C) - E_k} \right) \theta_k
+\end{equation}
+We can rewrite the problem from \ref{eq:main} as follows:
+\begin{subequations} \label{eq:taylor}
+    \begin{align}
+        &\min_{P, \theta} \frac{1}{\sum_k D_k}\sum_k D_k \left( \frac{1}{2} + \frac{P_k C + E_k}{P_k (1-C) - E_k} \right) \theta_k \\
+        &\text{subject to} \\
+        &\quad P_k > 0, \quad \forall k \in \mathcal{K} \\
+        &\quad \theta_k \leq N, \quad \forall k \in \mathcal{K} \\
+        &\quad \theta_k \in \mathbb{N}^+, \quad \forall k \in \mathcal{K} \\
+        &\quad \sum_k P_k \leq P_{\text{total}} \\
+        &\quad \sum_k \frac{1}{\theta_k} \leq M
+    \end{align}
+\end{subequations}
+We use alternating optimization to seperate equation (\ref{eq:taylor}) into two subproblems. With fixed power, we optimize SSB periodicity:
+\begin{subequations} \label{taylor_theta}
+    \begin{align}
+        &\min_{\theta} \frac{1}{\sum_k D_k}\sum_k D_k \left( \frac{1}{2} + \frac{P_k C + E_k}{P_k(1-C) - E_k} \right) \theta_k \\
+        &\text{subject to} \\
+        &\quad \theta_k \leq N, \quad \forall k \in \mathcal{K} \\
+        &\quad \theta_k \in \mathbb{N}^+, \quad \forall k \in \mathcal{K} \\
+        &\quad \sum_k \frac{P_k}{\theta_k} \leq P_{\text{total}} \\
+        &\quad \sum_k \frac{1}{\theta_k} \leq M
+    \end{align}
+\end{subequations}
+And with fixed SSB periodicity, we optimize power:
+\begin{subequations} \label{taylor_power}
+    \begin{align}
+        &\min_{P} \frac{1}{\sum_k D_k}\sum_k D_k \left( \frac{1}{2} + \frac{P_k C + E_k}{P_k(1-C) - E_k} \right) \theta_k \\
+        &\text{subject to} \\
+        &\quad P_k > 0, \quad \forall k \in \mathcal{K} \\
+        &\quad \sum_k \frac{P_k}{\theta_k} \leq P_{\text{total}}
+    \end{align}
+\end{subequations}
 
-% For each group $l = 1$ to $|\textbf{G}|$, the estimated number of users $|G_l|^{(t)}$ at time $t$ (a non-negative integer),
+For problem (\ref{taylor_theta}), it satisfies convex optimization problem if we ignore constraint (\ref{taylor_theta}d). Thus, we compute the problem (\ref{taylor_theta}) without constraint (\ref{taylor_theta}d) by cvx in matlab, and then ceil the $\theta$ to make sure all $\theta$ satisfy constraint (\ref{taylor_theta}d). 
 
-% Collision rate model $P_{Collision}^{G_l}(R)$ for each group $l$ (a function that computes collision rate given allocated resources $R$),
+For problem (\ref{taylor_power}), it is not a convex optimization problem. Thus I use sequential quadratic programming (SQP) to calculate the result. 
 
-% Minimum acceptable collision rate threshold $\epsilon$ (a real number, $0 < \epsilon < 1$).
+\section{Result}
+The result is shown in Table 1. We distribute power and SSB periodicity for all cells as our baseline. That is, 
+\begin{equation}
+    P_k = P_{total} / M, \quad \forall k \in \mathcal{K}
+\end{equation}
+\begin{equation}
+    \theta_k = K / M, \quad \forall k \in \mathcal{K}
+\end{equation}
+The result of GASA is not quite well. The gain is calculated as $\frac{(\text{delay of baseline} - \text{delay of proposed method})}{\text{delay of baseline}}$. The average delay is not better than baseline and it does not converge through iteration, as shown in Figure 5. The result of Taylor expansion is better than baseline. 
 
+\begin{table}[h!]
+\centering
+\caption{Comparison of different solution method}
+\begin{tabular}{|c|c|c|c|}
+\hline
+    & Equally Distributed & GASA & Taylor \\
+\hline
+delay (number of time slots) & 18.6805 & 21.9090 & 13.6312 \\
+\hline
+gain & 0\% & -17\% & 27\% \\
+\hline
+\end{tabular}
+\end{table}
 
-% \ENSURE
-% Optimal resource allocation vector $\{ M_{l} \}_{l=1}^{|\textbf{G}|}$
-
-% \STATE \COMMENT{\textbf{Phase I: Demand calculation and judgment}}
-% \FOR{$l = 1$ to $|\textbf{G}|$}
-% \STATE Calculate minimum resource requirement $M_{l}^{\min}$ to meet $P_{Collision}^{G_{l}} < \epsilon$
-% \ENDFOR
-% \STATE $M_{\mathrm{sum}} \gets \sum_{l=1}^{|\textbf{G}|} M_{l}^{\min}$
-
-% \IF{$M_{\mathrm{sum}} \le M_{total}$}
-% \STATE $M_{l} \gets M_{l}^{\min}$ for all $l$ \COMMENT{Resources are sufficient, direct allocation}
-% \STATE $M_{\mathrm{remaining}} \gets M_{total} - M_{\mathrm{sum}}$
-% \STATE $\text{quotient} \gets \lfloor M_{\mathrm{remaining}} / |\textbf{G}| \rfloor$ \COMMENT{Resources per group}
-% \STATE $\text{remainder} \gets M_{\mathrm{remaining}} \bmod |\textbf{G}|$ \COMMENT{Remaining resources}
-% \FOR{$l = 1$ to $|\textbf{G}|$}
-% \STATE $M_{l} \gets M_{l} + \text{quotient}$ \COMMENT{Add base allocation to each group}
-% \IF{$l \le \text{remainder}$}
-% \STATE $M_{l} \gets M_{l} + 1$ \COMMENT{Add one extra resource to first 'remainder' groups}
-% \ENDIF
-% \ENDFOR
-% \STATE \textbf{return} $\{M_{l}\}$
-% \ENDIF
-
-% \STATE \COMMENT{\textbf{Phase II: Resource rebalancing (resource shortage)}}
-% \STATE $w_l \gets |G_l|^{(t)} / \sum_{i=1}^{|\textbf{G}|} |G_i|^{(t)}$ for all $l$ \COMMENT{Calculate weight}
-% \FOR{$l = 1$ to $|\textbf{G}|$}
-% \STATE $M_{l} = w_l \cdot M_{total}$ \COMMENT{Resources allocation based on weight}
-% \ENDFOR
-
-% \STATE \textbf{return} $\{M_{l}\}$
-% \end{algorithmic}
-% \end{algorithm}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\textwidth]{thesis_code/result_GASA.png}
+    \caption{Average delay of GASA through iterations.}
+    \label{GASA iteration}
+\end{figure}
 
 \section{Future Work}
 \begin{enumerate}
-    \item calculate the results of the two algorithms.
-    \item explain why these are best algorithms for this problem. 
+    \item I have found the reason why GASA has bad result. I will modify it and compare the result with other methods.
+    \item To solve equation (4.11), maybe Dinkelbach algorithm can work.
+    \item I am still figuring out how to determine $a$ in Taylor series.
+    \item I only consider one epoch in the algorithm above. The relation between different epochs still need to be considered. 
 \end{enumerate}
-
