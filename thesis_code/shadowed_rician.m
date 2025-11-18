@@ -116,7 +116,7 @@ y_1 = shadowed_rician_cdf_derivative(x, m1, b1, Omega1);
 y_2 = shadowed_rician_cdf_derivative(x, m2, b2, Omega2);
 y_3 = shadowed_rician_cdf_derivative(x, m3, b3, Omega3);
 
-a = 0.5;
+a = 0.98;
 taylor = y1(a * 1000 / 10) + y_1(a * 1000 / 10) * (x - a);
 
 figure;
